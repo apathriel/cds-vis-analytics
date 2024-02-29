@@ -1,5 +1,3 @@
-# maybe end GUI, just plot it actually
-
 import os
 import timeit
 import sys
@@ -16,7 +14,10 @@ def compare_images_in_dataset(dataset_path, target_image, output_path, convert_t
 
     target_image_output_name = os.path.basename(target_image).split(".")[0] + "_most_similar_images"
     target_image_filename = os.path.basename(target_image)
-    target_image_hist = calculate_histogram(load_cv2_image(target_image))
+    target_image = load_cv2_image(target_image)
+    if convert_to_greyscale:
+        target_image = convert_image_to_greyscale(target_image)
+    target_image_hist = calculate_histogram(target_image)
 
     most_similar_images_5 = {}
 
@@ -24,8 +25,12 @@ def compare_images_in_dataset(dataset_path, target_image, output_path, convert_t
         if image == target_image_filename:
             continue
 
-        image_to_be_compared = calculate_histogram(load_cv2_image(os.path.join(dataset_path, image)))
-        comparison_val = compare_histograms(target_image_hist, image_to_be_compared)
+        image_to_be_compared = load_cv2_image(os.path.join(dataset_path, image))
+        if convert_to_greyscale:
+            image_to_be_compared = convert_image_to_greyscale(image_to_be_compared)
+        image_to_be_compared_hist = calculate_histogram(image_to_be_compared)
+
+        comparison_val = compare_histograms(target_image_hist, image_to_be_compared_hist)
 
         if len(most_similar_images_5) < 5:
             most_similar_images_5.update({image: comparison_val})

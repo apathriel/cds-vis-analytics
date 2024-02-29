@@ -9,9 +9,9 @@ def write_dict_to_csv(dictionary, output_path, filename="output.csv"):
     df.to_csv(os.path.join(output_path, filename) + ".csv", index=False)
     print(f"[SYSTEM] CSV file containing the 5 most similar images has been written to {output_path}")
 
-def compare_histograms(hist_01, hist_02):
+def compare_histograms(hist_01, hist_02, comp_metric=cv2.HISTCMP_CHISQR):
     """Compare two histograms."""
-    return round(cv2.compareHist(hist_01, hist_02, cv2.HISTCMP_CHISQR), 2)
+    return round(cv2.compareHist(hist_01, hist_02, comp_metric), 2)
 
 def load_cv2_image(path):
     """Load an image using cv2."""
