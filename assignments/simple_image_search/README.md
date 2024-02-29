@@ -10,8 +10,8 @@ The project utilizes the OpenCV module to perform a simple image search. The ima
 	│   └── output
 	├── src
 	│   ├── image_search.py
-    │   ├── image_selection.py
-    │   └── utilities.py
+    	│   ├── image_selection.py
+    	│   └── utilities.py
 	├── setup.sh
 	├── requirements.txt
 	├── README.md
@@ -27,16 +27,16 @@ Please ensure you have the following dependencies installed on your system:
 ```sh
 git clone https://github.com/apathriel/cds-vis-analytics
 ```
-1. Navigate to the project directory
+2. Navigate to the project directory
 ```sh
 cd assignments
 cd simple_image_search
 ```
-1. Run the setup script to install dependencies
+3. Run the setup script to install dependencies
 ``` sh
 bash setup.sh
 ```
-1. Run the main script
+4. Run the main script
 ```sh
 python src/image_search.py
 ```
