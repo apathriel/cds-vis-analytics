@@ -10,7 +10,7 @@ The project performs image classification using the cifar10 dataset, downloaded 
 	│   └── neural_network
 	├── src
 	│   ├── logistic_regression.py
-    │	└── neural_network.py
+   	│   └── neural_network.py
 	│
 	├── setup.sh
 	├── run_log.sh
