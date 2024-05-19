@@ -43,3 +43,7 @@ python src/image_search.py
 
 ### Usage 
 The image dataset should be placed in the 'input' directory. The image search algorithm should be run from the image_search.py script. The target is selected through the functions in image_selection.py. Both scripts utilize functions from the utility.py module. The `compare_images_in_dataset()` function takes a dataset input path, the image selected through the TKinter GUI, and an output path for the resulting .csv file.
+
+### Results
+
+### References
