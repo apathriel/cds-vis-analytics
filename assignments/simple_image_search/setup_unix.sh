@@ -7,6 +7,6 @@ python -m virtualenv env
 source ./env/bin/activate
 
 pip install --upgrade pip
-pip install -r requirements.txt
+pip install --no-cache-dir -r requirements.txt
 
 deactivate

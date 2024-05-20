@@ -1,28 +1,24 @@
 from pathlib import Path
-from typing import Generator, List, Tuple, Dict, Union
+from typing import List, Tuple, Dict, Union
 
 import numpy as np
 from numpy.linalg import norm
-
-import pandas as pd
-
-from image_selection_gui import ImageSelectionGUI
-from utilities import (
-    get_full_paths,
-    select_random_files,
-    image_generator,
-    write_dict_to_csv,
-)
-
 from sklearn.neighbors import NearestNeighbors
-
-from tqdm import tqdm as tqdm_bar
-
 from tensorflow.keras.applications.vgg16 import VGG16, preprocess_input
 from tensorflow.keras.models import Model
 from tensorflow.keras.preprocessing.image import load_img, img_to_array
+from tqdm import tqdm as tqdm_bar
 
-from visualize_results import visualize_image_search_similarity
+from image_selection_gui import ImageSelectionGUI
+from utilities import *
+
+from visualize_results import (
+    visualize_image_search_similarity,
+    visualize_image_features,
+)
+
+
+TQDM_PARAMS = get_tqdm_parameters()
 
 
 def extract_image_features(
@@ -58,11 +54,13 @@ def extract_image_features(
     features = pretrained_model.predict(preprocessed_img, verbose=False)
     # Flatten the features to a 1D array
     flattened_features = features.flatten()
-    # Normalize features
+    # (Optionally) Normalize features
     normalized_features = flattened_features / norm(features)
+
     return normalized_features if return_normalized else flattened_features
 
 
+@timing_decorator
 def knn_image_search_pipeline(
     dataset_path: Path, model: Model
 ) -> Dict[str, np.ndarray]:
@@ -79,7 +77,7 @@ def knn_image_search_pipeline(
     image_gen = image_generator(dataset_path)
 
     dataset_image_features = {}
-    for img_path in tqdm_bar(image_gen, desc="Processing images"):
+    for img_path in tqdm_bar(image_gen, **TQDM_PARAMS):
         features = extract_image_features(img_path, model)
         dataset_image_features[img_path.name] = features
     return dataset_image_features
@@ -92,6 +90,21 @@ def get_top_5_most_similar_images(
     save_results_to_csv: bool = False,
     output_path: Path = None,
 ) -> Dict[str, float]:
+    """
+    Retrieves the top 5 most similar images to a selected image based on their features.
+
+    Parameters:
+        image_features (Dict[str, Union[np.ndarray, List[float]]]): A dictionary containing the features of all images.
+        neighbors (NearestNeighbors): A NearestNeighbors object used for finding nearest neighbors.
+        selected_image (Path): The path to the selected image.
+        save_results_to_csv (bool, optional): Whether to save the results to a CSV file. Defaults to False.
+        output_path (Path, optional): The path to save the CSV file. Required if save_results_to_csv is True.
+
+    Returns:
+        Dict[str, float]: A dictionary where the keys are the filenames of the most similar images and the values are the distances.
+
+    """
+    target_image_output_name = selected_image.stem + "_most_similar_images"
     # Get the features of the selected image
     selected_image_features = image_features[selected_image.name]
     # Use the features of the selected image in kneighbors
@@ -102,12 +115,22 @@ def get_top_5_most_similar_images(
     top_5_dict = {filenames[indices[0][i]]: distances[0][i] for i in range(1, 6)}
 
     if save_results_to_csv:
-        write_dict_to_csv(top_5_dict, output_path, selected_image.stem)
+        write_dict_to_csv(top_5_dict, output_path, target_image_output_name)
 
     return top_5_dict
 
 
 def gui_get_selected_image(flower_dataset_path: Path) -> Path:
+    """
+    Tkinter GUI function to get the selected image input from the user. Wraps class functionality.
+
+    Parameters:
+        flower_dataset_path (Path): The path to the flower dataset.
+
+    Returns:
+        Path: The path of the selected image.
+
+    """
     # Pseudo random sampling of 3 images from the dataset for GUI selection
     selected_flowers_file_names = select_random_files(flower_dataset_path)
     # Get full paths of the randomly selected images
@@ -120,61 +143,6 @@ def gui_get_selected_image(flower_dataset_path: Path) -> Path:
     flower_selection_gui.create_flower_selection_gui()
     # Get the selected image from the GUI. Script operation will not continue execution until an image is selected.
     return flower_selection_gui.get_selected_image()
-
-
-import plotly.express as px
-from sklearn.decomposition import PCA
-import plotly.graph_objects as go
-
-from PIL import Image
-
-
-def visualize_image_features(
-    image_features: Dict[str, np.ndarray], image_directory: Path
-) -> None:
-    # Convert the image features to a 2D array
-    features = np.array(list(image_features.values()))
-    # Use PCA to reduce the dimensionality to 2
-    pca = PCA(n_components=2)
-    reduced_features = pca.fit_transform(features)
-    # Create a DataFrame of the 2D features
-    df = pd.DataFrame(reduced_features, columns=["x", "y"])
-    # Convert the image filenames to PIL Image objects
-    df["image"] = [
-        Image.open(image_directory / filename) for filename in image_features.keys()
-    ]
-
-    # Create a scatter plot of the 2D features
-    fig = go.Figure()
-
-    # Add scatter trace for image oints
-    fig.add_trace(
-        go.Scatter(
-            x=df["x"],
-            y=df["y"],
-            mode="markers",
-            marker=dict(size=8, color="rgba(0, 0, 0, 0)"),  # Make markers invisible
-            hoverinfo="none",
-        )
-    )
-
-    # Add image trace for images
-    for i in tqdm_bar(range(len(df)), desc='Adding images to plot'):
-        fig.add_layout_image(
-            dict(
-                source=df["image"][i],  # PIL Image object
-                x=df["x"][i],
-                y=df["y"][i],
-                sizex=1,  # size in plot units
-                sizey=1,  # size in plot units
-                xanchor="center",
-                yanchor="middle",
-            )
-        )
-
-    fig.update_layout_images(dict(xref="x", yref="y", layer="below"))
-
-    fig.show()
 
 
 def main():
@@ -217,7 +185,12 @@ def main():
         output_path=plot_output_path,
     )
 
-    visualize_image_features(image_features=image_features, image_directory=flower_dataset_path)
+    # Visualize all image features as scatter plot using PCA dimensionality reduction 
+    visualize_image_features(
+        image_features=image_features,
+        save_visualization=False,
+        output_path=plot_output_path,
+    )
 
 
 if __name__ == "__main__":

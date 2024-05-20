@@ -1,20 +1,14 @@
 from pathlib import Path
 from tkinter import *
-from typing import Dict, Generator
+from typing import Dict
+
+from tqdm import tqdm as tqdm_bar
 
 from image_selection_gui import ImageSelectionGUI
 from utilities import *
-from tqdm import tqdm
 from visualize_results import visualize_image_search_similarity
 
-TQDM_PARAMS = {
-    "desc": "Processing images",
-    "leave": True,
-    "ncols": 100,
-    "unit": "image",
-    "unit_scale": True,
-}
-
+TQDM_PARAMS = get_tqdm_parameters()
 
 
 @timing_decorator
@@ -50,7 +44,7 @@ def compare_images_in_dataset(
 
     image_gen = image_generator(dataset_path)
 
-    for image in tqdm(image_gen, **TQDM_PARAMS):
+    for image in tqdm_bar(image_gen, **TQDM_PARAMS):
         if image.name == target_image_filename:
             continue
 
@@ -78,26 +72,39 @@ def compare_images_in_dataset(
     return most_similar_images_5
 
 
-def main():
-    # Initialize Paths for input/output directories
-    flower_dataset_path = Path(__file__).parent / ".." / "in"
-    csv_output_path = Path(__file__).parent / ".." / "out" / "histogram" / "csv"
-    plot_output_path = Path(__file__).parent / ".." / "out" / "histogram" / "plots"
+def gui_get_selected_image(flower_dataset_path: Path) -> Path:
+    """
+    Tkinter GUI function to get the selected image input from the user. Wraps class functionality.
 
+    Parameters:
+        flower_dataset_path (Path): The path to the flower dataset.
+
+    Returns:
+        Path: The path of the selected image.
+
+    """
     # Pseudo random sampling of 3 images from the dataset for GUI selection
     selected_flowers_file_names = select_random_files(flower_dataset_path)
-
     # Get full paths of the randomly selected images
     selected_flowers = get_full_paths(flower_dataset_path, selected_flowers_file_names)
-
-    # Instantiate the ImageSelectionGUI class
+    # Instantiate the ImageSelectionGUI class instance
     flower_selection_gui = ImageSelectionGUI(
         selected_flowers, selected_flowers_file_names
     )
     # Create the GUI for flower selection. Prompt user for image to compare against dataset
     flower_selection_gui.create_flower_selection_gui()
     # Get the selected image from the GUI. Script operation will not continue execution until an image is selected.
-    selected_image = flower_selection_gui.get_selected_image()
+    return flower_selection_gui.get_selected_image()
+
+
+def main():
+    # Initialize Paths for input/output directories
+    flower_dataset_path = Path(__file__).parent / ".." / "in"
+    csv_output_path = Path(__file__).parent / ".." / "out" / "histogram" / "csv"
+    plot_output_path = Path(__file__).parent / ".." / "out" / "histogram" / "plots"
+
+    # Get the selected image from the GUI
+    selected_image = gui_get_selected_image(flower_dataset_path)
 
     # Compare the selected image against the dataset and return the top 5 most similar images
     top_5_most_similar_images = compare_images_in_dataset(

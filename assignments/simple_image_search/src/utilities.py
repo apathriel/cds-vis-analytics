@@ -4,22 +4,38 @@ import random
 import timeit
 from typing import Any, Callable, Dict, List, Optional, Union, Generator
 
+import cv2
 import numpy as np
 import pandas as pd
-import cv2
 
-def image_generator(dataset_path: Path) -> Generator[Path, None, None]:
+
+def get_tqdm_parameters() -> Dict[str, Any]:
+    return {
+        "desc": "Processing images",
+        "leave": True,
+        "ncols": 100,
+        "unit": " images",
+        "unit_scale": True,
+    }
+
+
+def image_generator(
+    dataset_path: Path, valid_formats: List[str] = [".jpg", ".png"]
+) -> Generator[Path, None, None]:
     """
     Yield images one by one from a dataset.
 
     Parameters:
     - dataset_path (Path): The path to the dataset directory.
+    - valid_formats (List[str]): List of valid file formats.
 
     Yields:
     - Path: The path to each image in the dataset.
     """
     for image_path in dataset_path.iterdir():
-        yield image_path
+        if image_path.suffix.lower() in valid_formats:
+            yield image_path
+
 
 def write_dict_to_csv(
     dictionary: Dict, output_path: Path, filename: str = "output"
@@ -57,12 +73,12 @@ def compare_histograms(
     hist_01: np.ndarray, hist_02: np.ndarray, comp_metric: int = cv2.HISTCMP_CHISQR
 ) -> float:
     """
-    Compare two histograms using the specified comparison metric.
+    Compare two histograms using a specified comparison metric.
 
     Parameters:
         hist_01 (np.ndarray): The first histogram to compare.
         hist_02 (np.ndarray): The second histogram to compare.
-        comp_metric (int): The comparison metric to use. Defaults to cv2.HISTCMP_CHISQR.
+        comp_metric (int): The comparison metric to use (default: cv2.HISTCMP_CHISQR).
 
     Returns:
         float: The result of the histogram comparison, rounded to 2 decimal places.
@@ -98,7 +114,7 @@ def load_cv2_image(image_path: Union[str, Path]) -> np.ndarray:
     """
     Load an image using the cv2 module.
 
-    Args:
+    Parameters:
     image_path (Union[str, Path]): The path to the image file.
 
     Returns:
