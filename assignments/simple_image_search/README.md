@@ -78,10 +78,10 @@ python src/histogram_image_search.py
 ### ⚒️ Usage 
 The image dataset should be placed in the 'in' directory. The image search algorithm should be run from the project root through the main scripts. The target is selected through the functions in `image_selection_gui.py`. Both scripts utilize functions from the ``utilities.py`` module. The `compare_images_in_dataset()` function takes a dataset input path, the image selected through the TKinter GUI, and an output path for the resulting .csv file.
 
-### 📊 Results
+## 📊 Results
 If you wish to compare the two scripts, you'd be tempted to examine the 'Distance' column of the CSV files. However, the `histogram` script utilizes Chi-Square distance, while the `knn` script utilizes Cosine similarity. Thus, while the project does not present any quantitative metrics on which to evaluate, the simple eye-test speaks to the efficacy of the results from the KNN script. Although not necessarily generalizable, but from personal experience, if you examine the two visualizations, you will find greater similarity between the flowers yielded by the `knn` script. Perhaps you could evaluate the algorithm performance through evaluating the categorical labels of the yielded flowers.
 
-### 📖 References
+## 📖 References
 - [VGG16 Model from Keras](https://keras.io/api/applications/vgg/)
 - [cv2 Histogram Comparison](https://docs.opencv.org/4.x/d8/dc8/tutorial_histogram_comparison.html)
 - [17 Category Flower Dataset](https://www.robots.ox.ac.uk/~vgg/data/flowers/17/)
