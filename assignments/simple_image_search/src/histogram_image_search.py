@@ -16,19 +16,6 @@ TQDM_PARAMS = {
 }
 
 
-def image_generator(dataset_path: Path) -> Generator[Path, None, None]:
-    """
-    Yield images one by one from a dataset.
-
-    Parameters:
-    - dataset_path (Path): The path to the dataset directory.
-
-    Yields:
-    - Path: The path to each image in the dataset.
-    """
-    for image in dataset_path.iterdir():
-        yield image
-
 
 @timing_decorator
 def compare_images_in_dataset(
@@ -94,8 +81,8 @@ def compare_images_in_dataset(
 def main():
     # Initialize Paths for input/output directories
     flower_dataset_path = Path(__file__).parent / ".." / "in"
-    csv_output_path = Path(__file__).parent / ".." / "out" / "csv"
-    plot_output_path = Path(__file__).parent / ".." / "out" / "plots"
+    csv_output_path = Path(__file__).parent / ".." / "out" / "histogram" / "csv"
+    plot_output_path = Path(__file__).parent / ".." / "out" / "histogram" / "plots"
 
     # Pseudo random sampling of 3 images from the dataset for GUI selection
     selected_flowers_file_names = select_random_files(flower_dataset_path)

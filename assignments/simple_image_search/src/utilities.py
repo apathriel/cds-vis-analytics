@@ -2,12 +2,24 @@ import logging
 from pathlib import Path
 import random
 import timeit
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union, Generator
 
 import numpy as np
 import pandas as pd
 import cv2
 
+def image_generator(dataset_path: Path) -> Generator[Path, None, None]:
+    """
+    Yield images one by one from a dataset.
+
+    Parameters:
+    - dataset_path (Path): The path to the dataset directory.
+
+    Yields:
+    - Path: The path to each image in the dataset.
+    """
+    for image_path in dataset_path.iterdir():
+        yield image_path
 
 def write_dict_to_csv(
     dictionary: Dict, output_path: Path, filename: str = "output"
