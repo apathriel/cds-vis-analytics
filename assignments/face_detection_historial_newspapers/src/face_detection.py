@@ -208,17 +208,17 @@ def facial_recognition_newspaper_image_pipeline(
 
 
 def main():
-    NEWSPAPER_INPUT_DIRECTORY = Path(__file__).parent / ".." / "in"
-    MAIN_RESULTS_OUTPUT_DIRECTORY = Path(__file__).parent / ".." / "out"
+    newspaper_input_directory = Path(__file__).parent / ".." / "in"
+    main_results_output_directory = Path(__file__).parent / ".." / "out"
 
-    DECADE_COLUMN_TITLE = "Decade"
-    PERCENTAGE_OF_FACES_COLUMN_TITLE = "Percentage of Pages with Faces"
+    decade_column_title = "Decade"
+    percentage_of_faces_column_title = "Percentage of Pages with Faces"
 
     VISUALIZATION_PARAMS = {
-        "x_axis_df_column": DECADE_COLUMN_TITLE,
-        "y_axis_df_column": PERCENTAGE_OF_FACES_COLUMN_TITLE,
+        "x_axis_df_column": decade_column_title,
+        "y_axis_df_column": percentage_of_faces_column_title,
         "save_visualization": True,
-        "output_directory": MAIN_RESULTS_OUTPUT_DIRECTORY / "plots",
+        "output_directory": main_results_output_directory / "plots",
         "img_format": "pdf",
     }
 
@@ -231,9 +231,9 @@ def main():
     }
 
     facial_recognition_newspaper_image_pipeline(
-        input_directory_path=NEWSPAPER_INPUT_DIRECTORY,
-        results_output_directory_path=MAIN_RESULTS_OUTPUT_DIRECTORY,
-        face_percentage_column_title=PERCENTAGE_OF_FACES_COLUMN_TITLE,
+        input_directory_path=newspaper_input_directory,
+        results_output_directory_path=main_results_output_directory,
+        face_percentage_column_title=percentage_of_faces_column_title,
         visualize_results=True,
         visualization_parameters=VISUALIZATION_PARAMS,
         tqdm_parameters=TQDM_PARAMS,
