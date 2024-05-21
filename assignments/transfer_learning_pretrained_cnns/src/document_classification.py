@@ -1,10 +1,7 @@
-import logging
 import os
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import numpy as np
-
 from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer
@@ -19,42 +16,33 @@ from tensorflow.keras.preprocessing.image import (
     img_to_array,
     load_img,
 )
-
 from tqdm import tqdm
 
+from logger_utils import get_logger
+from plotting_utilities import plot_history
+
 # Logging setup
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-
-ch = logging.StreamHandler()
-ch.setLevel(logging.INFO)
-
-formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-ch.setFormatter(formatter)
-
-logger.addHandler(ch)
+logger = get_logger(__name__)
 
 
 # Data processing, loading and prep
 def initialize_data_directory(data_path):
-    data_dir = Path(data_path)
 
     # Check if the directory exists
-    if not data_dir.exists():
-        raise FileNotFoundError(f"The directory {data_dir} does not exist.")
+    if not data_path.exists():
+        raise FileNotFoundError(f"The directory {data_path} does not exist.")
 
     # Check if the directory is accessible
-    if not data_dir.is_dir():
-        raise NotADirectoryError(f"The path {data_dir} is not a directory.")
+    if not data_path.is_dir():
+        raise NotADirectoryError(f"The path {data_path} is not a directory.")
 
-    return data_dir
+    return data_path
 
 
 def create_label_list_from_subdirs(image_files):
     labels = []
-    # For each image file, get the parent directory name and use it as label
     for image_file in image_files:
-        labels.append(os.path.basename(os.path.dirname(image_file)))
+        labels.append(Path(image_file).parent.name)
     labels = np.array(labels)
     return labels
 
@@ -209,14 +197,10 @@ def load_saved_model(model_path):
     return load_model(model_path)
 
 
-def save_trained_model(
-    model, output_dir, model_format="keras", file_name="VGG16_tobacco_model"
-):
+def save_trained_model(model, output_dir: Path, model_format="keras", file_name="VGG16_tobacco_model"):
     valid_formats = ["HDF5", "SavedModel", "keras"]
     if model_format not in valid_formats:
-        raise ValueError(
-            f"Invalid model format: {model_format}. Expected one of: {valid_formats}"
-        )
+        raise ValueError(f"Invalid model format: {model_format}. Expected one of: {valid_formats}")
 
     if model_format == "HDF5":
         file_name += ".h5"
@@ -225,96 +209,30 @@ def save_trained_model(
     elif model_format == "keras":
         file_name += ".keras"
 
-    os.makedirs(output_dir, exist_ok=True)
-    file_path = os.path.join(output_dir, file_name)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    file_path = output_dir / file_name
     model.save(file_path)
     logger.info(f"Model saved as {file_name}")
 
 
-def plot_history(
-    H,
-    num_of_epochs: int,
-    save_plot: bool = False,
-    output_dir: str = "out",
-    plot_name: str = "VGG16_tobacco_plot",
-    plot_format: str = "png",
-):
-    valid_output_formats = [
-        "eps",
-        "jpeg",
-        "jpg",
-        "pdf",
-        "pgf",
-        "png",
-        "ps",
-        "raw",
-        "rgba",
-        "svg",
-        "svgz",
-        "tif",
-        "tiff",
-    ]
-    if plot_format not in valid_output_formats:
-        raise ValueError(f"plot_format must be one of {valid_output_formats}")
-
-    plt.figure(figsize=(12, 6))
-    plt.subplot(1, 2, 1)
-    plt.plot(np.arange(0, num_of_epochs), H.history["loss"], label="train_loss")
-    plt.plot(
-        np.arange(0, num_of_epochs),
-        H.history["val_loss"],
-        label="val_loss",
-        linestyle=":",
-    )
-    plt.title("Loss curve")
-    plt.xlabel("Epoch")
-    plt.ylabel("Loss")
-    plt.tight_layout()
-    plt.legend()
-
-    plt.subplot(1, 2, 2)
-    plt.plot(np.arange(0, num_of_epochs), H.history["accuracy"], label="train_acc")
-    plt.plot(
-        np.arange(0, num_of_epochs),
-        H.history["val_accuracy"],
-        label="val_acc",
-        linestyle=":",
-    )
-    plt.title("Accuracy curve")
-    plt.xlabel("Epoch")
-    plt.ylabel("Accuracy")
-    plt.tight_layout()
-    plt.legend()
-
-    if save_plot:
-        os.makedirs(output_dir, exist_ok=True)
-        plt.savefig(os.path.join("out", plot_name + "." + plot_format))
-        logger.info(f"Plot saved as {plot_name}")
-
-    plt.show()
-
-
-def save_classification_report(
-    classification_report,
-    output_dir,
-    log_output=True,
-    file_name="VGG16_tobacco_report.txt",
-):
+def save_classification_report(classification_report: str, output_dir: Path, log_output: bool =True, file_name: str = "VGG16_tobacco_report.txt"):
     if log_output:
         logger.info(f"Classification Report:\n{classification_report}")
 
-    os.makedirs(output_dir, exist_ok=True)
-    file_path = os.path.join(output_dir, file_name)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    file_path = output_dir / file_name
     with open(file_path, "w") as file:
         file.write(classification_report)
     logger.info(f"Classification report saved as {file_name}")
 
 
 if __name__ == "__main__":
-    path_to_input_folder = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), "..", "in"
-    )
-    data_dir = initialize_data_directory(path_to_input_folder)
+    path_to_input_directory = Path(__file__).parent / ".." / "in"
+    path_to_output_directory = Path(__file__).parent / ".." / "out"
+    path_to_model_directory = path_to_output_directory / "models"
+
+    data_dir = initialize_data_directory(path_to_input_directory)
+
     model = model_pipeline(optimizer_type="Adam")
 
     X, y = load_image_training_data(data_dir)
@@ -329,7 +247,7 @@ if __name__ == "__main__":
     )
     logger.info("Model training completed.")
 
-    save_trained_model(model, os.path.join("out", "models"), model_format="keras")
+    save_trained_model(model, path_to_model_directory, model_format="keras")
 
     predictions = model.predict(X_test, batch_size=128)
     labels = get_unique_labels_from_subdirs(data_dir)
@@ -342,7 +260,7 @@ if __name__ == "__main__":
     )
 
     save_classification_report(
-        VGG16_report, "out", file_name="VGG16_tobacco_report.txt"
+        VGG16_report, path_to_output_directory, file_name="VGG16_tobacco_report.txt"
     )
     plot_history(
         H,
