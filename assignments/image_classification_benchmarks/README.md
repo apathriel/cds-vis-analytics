@@ -1,8 +1,13 @@
-# Classification benchmarks with Logistic Regression and Neural Networks
+# ⏱️ Classification benchmarks with Logistic Regression and Neural Networks
 
-The project performs image classification using the cifar10 dataset, downloaded and imported through the TensorFlow module. Image data is preprocessed. Specifically, images are greyscaled, pixel values are normalized, and np.ndarray is reshaped. Numerical labels are converted to lexical, taken from cifar10 docs. Classifier is trained and fit to the data. Predictions on test split are performed and classification is output to `out` directory. The project is comprised of two scripts, both utilizing scikit-learn for machine learning. The script `logistic_regression.py` utilizes the `LogisticRegression()` classifier, while the `neural_network.py` script utilizes the `MLPClassifier()`. In the case of the neural network, the loss curve is plotted and saved.
+The project performs image classification using the [CIFAR-10 dataset](https://www.cs.toronto.edu/~kriz/cifar.html), downloaded and imported through the TensorFlow module. Image data is preprocessed: Specifically, images are greyscaled, pixel values are normalized, and 2D image array is flattened into 1D array. Numerical labels are converted to lexical, taken from Cifar10 docs. Classifier is trained and fit to the data. Predictions on test split are performed and classification report is (optionally) saved to the `out` directory. The project is comprised of two scripts, both utilizing scikit-learn for machine learning. The script `logistic_regression.py` utilizes the `LogisticRegression()` classifier, while the `neural_network.py` script utilizes the `MLPClassifier()`. Both scripts serve as pipelines for applying their respective model architectures to a classification task. In the case of the neural network, the loss curve is plotted and saved.
 
-## Project structure
+## 📈 Data
+
+### 📋 Dataset
+The project's image classification is based upon the CIFAR-10 dataset. The dataset contains 60.000 32x32 color images divided between 10 classes, it's divided into 50.000 training images and 10.000 test images (83/17). The dataset should be placed in the `in` directory, and can be sourced [here](https://www.cs.toronto.edu/~kriz/cifar.html).
+
+## 📂 Project structure
 ```
 └── image_classification_benchmarks
 	├── out
@@ -12,19 +17,20 @@ The project performs image classification using the cifar10 dataset, downloaded 
 	│   ├── logistic_regression.py
    	│   └── neural_network.py
 	│
-	├── setup.sh
+	├── setup_unix.sh
+	├── setup_win.sh
 	├── run_log.sh
 	├── run_neural.sh
 	├── requirements.txt
 	└── README.md
 ```
 
-## Setup
-***Dependencies***
+## ⚙️ Setup
+### 🐍 Dependencies
 Please ensure you have the following dependencies installed on your system:
-- **Python**: `version 3.12.2`
+- **Python**: `version 3.12.3`
 
-### Installation
+### 💾 Installation
 1. Clone the repository
 ```sh
 git clone https://github.com/apathriel/cds-vis-analytics
@@ -34,12 +40,26 @@ git clone https://github.com/apathriel/cds-vis-analytics
 cd assignments
 cd image_classification_benchmarks
 ```
-3. Run the setup script to instantiate virtual environment and install dependencies
-``` sh
-bash setup.sh
+3. Run the setup script to install dependencies, depending on OS.
+```sh
+bash setup_unix.sh
 ```
 4. Activate virtual environment, or run main py scripts through run_log and run_neural
 ```sh
 python src/logistic_regression.py
 bash run_neural.sh
 ```
+
+### 🚀 Usage
+After you have installed the necessary dependencies and set up your environment, you can run the scripts in this project. The main scripts contain pre-defined hyperparameters for the model responsible for the image classification, `LogisticRegression` and `MLPClassifier`. If run, the script will execute with the default parameters, identified through iterative testing and a summative grid search implemented through scikit-learn.
+
+## 📊 Results
+
+The project's main scripts generate a each classification report using scikit-learn, which serves as an obvious point of comparison between the model architectures.
+
+Please refer to the table below for a summative comparison of key evaluation metrics:
+
+## 📖 References
+- [Cifar10 dataset](https://www.cs.toronto.edu/~kriz/cifar.html)
+- [scikit-learn Logistic Regression](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html)
+- [scikit-learn MLPClassifier](https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPClassifier.html)

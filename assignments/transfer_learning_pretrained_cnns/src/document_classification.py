@@ -182,7 +182,7 @@ def augment_training_data(X_train, y_train, use_augmentation=True):
     return data_gen
 
 
-def split_data(X, y, test_size=0.25, validation_size=0.1):
+def split_data(X, y, test_size=0.20, validation_size=0.1):
     # First split to separate out the training set
     X_train, X_temp, y_train, y_temp = train_test_split(
         X, y, test_size=test_size + validation_size
