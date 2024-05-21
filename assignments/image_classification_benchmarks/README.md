@@ -55,9 +55,50 @@ After you have installed the necessary dependencies and set up your environment,
 
 ## 📊 Results
 
+### 📝 Summary 
+
 The project's main scripts generate a each classification report using scikit-learn, which serves as an obvious point of comparison between the model architectures.
 
 Please refer to the table below for a summative comparison of key evaluation metrics:
+(Weighted avg was selected, but effectively the same as macro avg, as classes have same split).
+
+| Model             | Metric      | Precision | Recall | F1-score |
+|-------------------|-------------|-----------|--------|----------|
+| Logistic Regression | Weighted Avg| 0.31      | 0.31   | 0.31     |
+| Neural Network    | Weighted Avg| 0.44      | 0.44   | 0.44     |
+
+Please refer to the respective classification reports for the full reports.
+
+### 📐 Hyperparameters
+
+The results were produced using the following hyperparameters. They were identified and initiated through a mix of trial-and-error, summatively evaluated through a grid search, specifically implemented through scikit-learn's `GridSearchCV`.
+
+   #### Logistic Regression
+
+| Hyperparameter   | Value       |
+|-------------|-------------|
+| penalty     | "l2"        |
+| solver      | "saga"      |
+| C           | 0.001       |
+| max_iter    | 1000        |
+| tol         | 0.001       |
+| multi_class | "multinomial"|
+
+#### Neural Network
+
+| Hyperparameter          | Value       |
+|--------------------|-------------|
+| hidden_layer_sizes | (256, 128)  |
+| activation         | "relu"      |
+| solver             | "adam"      |
+| alpha              | 0.05        |
+| max_iter           | 500         |
+| early_stopping     | True        |
+| learning_rate_init | 0.001       |
+
+### 🔎 Interpretation
+ Looking at the F1-scores of 0.31 for the Logistic Regression model and 0.44 for the Neural Network: While `neural_network.py` takes longer to run, it performs substantially better on the image classification task. This embodies the shift from stastical models to neural networks. The neural network implemenation was quite simple, and the complexity, and likely performance, could be greatly increased. Implementing a deep learning CNN architecture with self-attention mechanisms would likely lead to substantial improvements.
+
 
 ## 📖 References
 - [Cifar10 dataset](https://www.cs.toronto.edu/~kriz/cifar.html)
