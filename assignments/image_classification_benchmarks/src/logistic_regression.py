@@ -2,72 +2,30 @@ from pathlib import Path
 import ssl
 from typing import Dict, Optional
 
-import cv2
-import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV, cross_val_score
 from tensorflow.keras.datasets import cifar10
 from tqdm import tqdm
+
+from utilities import (
+    convert_dict_to_table,
+    convert_labels_to_class_name,
+    save_classification_report,
+    preprocess_image_data
+)
 
 # disable SSL certificate verification, not working for virtual environment
 ssl._create_default_https_context = ssl._create_unverified_context
 
 
-def preprocess_image_data(images_to_process: np.ndarray) -> np.ndarray:
-    """
-    Preprocesses image data by converting images to grayscale and normalizing pixel values.
-
-    Parameters:
-        images_to_process (np.ndarray): Array of images to be processed.
-
-    Returns:
-        np.ndarray: Processed image data with normalized pixel values.
-
-    """
-    print("[INFO] Processing image data...")
-    processed_images = np.array(
-        [
-            normalize_pixel_values(convert_image_to_greyscale(image))
-            for image in tqdm(images_to_process, desc="Processing images")
-        ]
-    )
-    print("[INFO] Image data has been processed!")
-    return np.array(processed_images).reshape(-1, 1024)
-
-
-def convert_image_to_greyscale(img: np.ndarray) -> np.ndarray:
-    """
-    Converts an image to grayscale using cv2.
-
-    Parameters:
-        img (np.ndarray): The input image.
-
-    Returns:
-        np.ndarray: The grayscale image.
-    """
-    return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-
-def normalize_pixel_values(img: np.ndarray) -> np.ndarray:
-    """
-    Normalizes the pixel values of an image using v2.
-
-    Parameters:
-        img (np.ndarray): The input image.
-
-    Returns:
-        np.ndarray: The normalized image.
-
-    """
-    return cv2.normalize(img, img, 0, 1.0, cv2.NORM_MINMAX)
-
-
 def train_and_fit_logistic_regression_classifier(
     X_train: np.ndarray,
     y_train: np.ndarray,
-    use_grid_search: bool = True,
+    use_grid_search: bool = False,
+    use_cross_validation: bool = False,
+    cross_validation_folds: int = 10,
     parameters: Optional[Dict] = None,
 ) -> LogisticRegression:
     """
@@ -77,6 +35,7 @@ def train_and_fit_logistic_regression_classifier(
         X_train (np.ndarray): The input training data.
         y_train (np.ndarray): The target training data.
         use_grid_search (bool, optional): Whether to use grid search to find the best parameters. Defaults to True.
+        use_cross_validation (bool, optional): Whether to use cross-validation. Defaults to False.
         parameters (Optional[Dict], optional): The parameters for grid search. Defaults to None.
 
     Returns:
@@ -99,62 +58,23 @@ def train_and_fit_logistic_regression_classifier(
             C=0.001,
             random_state=24,
             max_iter=1000,
-            verbose=False,
-            tol=0.001,
-            multi_class="auto",
+            verbose=True,
+            tol=0.1,
+            multi_class="multinomial",
         ).fit(X_train, y_train)
+
+        if use_cross_validation:
+            # Optionally perform k-fold cross-validation
+            print(
+                "[INFO] Performing cross-validation with {cross_validation_folds} folds..."
+            )
+            scores = cross_val_score(
+                model, X_train, y_train, cv=cross_validation_folds, verbose=3
+            )
+            print(f"[INFO] Cross-validation scores: {scores}")
+            print(f"[INFO] Average cross-validation score: {scores.mean()}")
+
     return model
-
-
-def convert_dict_to_table(data: Dict) -> np.ndarray:
-    """
-    Converts a dictionary into a numpy array table.
-
-    Parameters:
-        data (Dict): The dictionary to be converted.
-
-    Returns:
-        np.ndarray: The numpy array table containing the keys and values from the dictionary.
-    """
-    return np.column_stack((list(data.keys()), list(data.values())))
-
-
-def convert_labels_to_class_name(
-    data_labels: np.ndarray, label_names: Dict
-) -> np.ndarray:
-    """
-    Converts numeric labels to corresponding class names.
-
-    Parameters:
-        data_labels (np.ndarray): Array of numeric labels.
-        label_names (Dict): Dictionary mapping label keys to class names.
-
-    Returns:
-        np.ndarray: Array of class names corresponding to the input labels.
-    """
-    label_key_list = list(label_names.values())
-    return np.array([label_key_list[label] for label in data_labels])
-
-
-def save_classification_report(
-    classification_report: str,
-    output_dir: Path,
-    file_name: str = "logistic_classification_report.txt",
-) -> None:
-    """
-    Save the classification report to a file.
-
-    Parameters:
-        classification_report (str): The classification report to be saved.
-        output_dir (Path): The directory where the file will be saved.
-        file_name (str, optional): The name of the file. Defaults to "logistic_classification_report.txt".
-    """
-
-    output_dir.mkdir(parents=True, exist_ok=True)
-    file_path = output_dir / file_name
-    with open(file_path, "w") as file:
-        file.write(classification_report)
-    print(f"[INFO] Classification report saved as {file_name}")
 
 
 def main():
@@ -190,15 +110,15 @@ def main():
     )
 
     grid_search_parameters = {
-    'penalty': ['l2', 'none'],
-    'solver': ['lbfgs', 'liblinear', 'saga'],
-    'C': [0.001],
-    'random_state': [24],
-    'max_iter': [500],
-    'verbose': [False],
-    'tol': [0.1, 0.01, 0.001],
-    'multi_class': ['auto', 'ovr', 'multinomial'],
-}
+        "penalty": ["l2", "none"],
+        "solver": ["lbfgs", "liblinear", "saga"],
+        "C": [0.001],
+        "random_state": [24],
+        "max_iter": [500],
+        "verbose": [False],
+        "tol": [0.1, 0.01, 0.001],
+        "multi_class": ["ovr", "multinomial"],
+    }
 
     # train and fit classifier
     classifier = train_and_fit_logistic_regression_classifier(
@@ -206,6 +126,8 @@ def main():
         y_train_processed,
         use_grid_search=False,
         parameters=grid_search_parameters,
+        use_cross_validation=False,
+        cross_validation_folds=10,
     )
 
     # predict test data

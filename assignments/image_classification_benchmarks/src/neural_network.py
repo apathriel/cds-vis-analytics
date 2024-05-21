@@ -9,30 +9,16 @@ from sklearn.metrics import classification_report
 from sklearn.model_selection import GridSearchCV
 from sklearn.neural_network import MLPClassifier
 from tensorflow.keras.datasets import cifar10
-from tqdm import tqdm
+
+from utilities import (
+    convert_dict_to_table,
+    convert_labels_to_class_name,
+    preprocess_image_data,
+    save_classification_report,
+)
 
 # disable SSL certificate verification, not working for virtual environment
 ssl._create_default_https_context = ssl._create_unverified_context
-
-
-def preprocess_image_data(images_to_process: np.ndarray) -> np.ndarray:
-    print("[INFO] Processing image data...")
-    processed_images = np.array(
-        [
-            normalize_pixel_values(convert_image_to_greyscale(image))
-            for image in tqdm(images_to_process, desc="Processing images")
-        ]
-    )
-    print("[INFO] Image data has been processed!")
-    return np.array(processed_images).reshape(-1, 1024)
-
-
-def convert_image_to_greyscale(img: np.ndarray) -> np.ndarray:
-    return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-
-def normalize_pixel_values(img: np.ndarray) -> np.ndarray:
-    return cv2.normalize(img, img, 0, 1.0, cv2.NORM_MINMAX)
 
 
 def train_and_fit_neural_network_classifier(
@@ -59,30 +45,6 @@ def train_and_fit_neural_network_classifier(
     else:
         model = clf.fit(X_train, y_train)
     return model
-
-
-def convert_dict_to_table(data: Dict) -> np.ndarray:
-    return np.column_stack((list(data.keys()), list(data.values())))
-
-
-def convert_labels_to_class_name(
-    data_labels: np.ndarray, label_names: Dict
-) -> np.ndarray:
-    label_key_list = list(label_names.values())
-    return np.array([label_key_list[label] for label in data_labels])
-
-
-def save_classification_report(
-    classification_report: str,
-    output_dir: Path,
-    file_name: str = "neural_classification_report.txt",
-) -> None:
-    output_dir.mkdir(parents=True, exist_ok=True)
-    file_path = output_dir / file_name
-    with open(file_path, "w") as file:
-        file.write(classification_report)
-    print(f"[INFO] Classification report saved as {file_name}")
-
 
 def plot_loss_curve(
     classifier: MLPClassifier,
