@@ -15,7 +15,8 @@ The project's image classification is based upon the CIFAR-10 dataset. The datas
 	│   └── neural_network
 	├── src
 	│   ├── logistic_regression.py
-   	│   └── neural_network.py
+	│	├── neural_network.py
+   	│   └── utilities.py
 	│
 	├── setup_unix.sh
 	├── setup_win.sh
