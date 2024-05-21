@@ -19,6 +19,8 @@ import pandas as pd
 from plotting_utilities import (
     construct_visualization_parameters,
     visualize_trend_by_time_from_df,
+    interactive_visualization_trend_by_time_from_df,
+    interactive_visualization_from_multiple_dataframes,
 )
 from PIL import Image
 from PIL import UnidentifiedImageError
@@ -32,20 +34,46 @@ FACE_RECOGNITION_MTCNN = MTCNN(keep_all=True)
 # Load pre-trained FaceNet model
 RESNET = InceptionResnetV1(pretrained="casia-webface").eval()
 
+def get_first_element(filename, split_character='_'):
+    return filename.split(split_character)[0]
+
+def get_first_element_from_filename(file_path: Path, split_character) -> str:
+    return file_path.name.split(split_character)[0]
 
 def preload_and_visualize_results(
     csv_dir_path: Path = Path(__file__).parent / ".." / "out" / "csv_results",
-) -> None:
+visualization_method: str = None) -> None:
     df_list = load_csv_as_df_from_directory(csv_dir_path)
-    for df in df_list:
-        visualize_trend_by_time_from_df(
-            df=df,
+    
+    if visualization_method == "interactive":
+        for df in df_list:
+            interactive_visualization_trend_by_time_from_df(
+                df=df,
+                plot_title="Face Detection Results",
+                x_axis_df_column="Decade",
+                y_axis_df_column="Percentage of Pages with Faces",
+                save_visualization=False,
+            )
+    elif visualization_method == "group":
+        df_list = load_csv_as_df_from_directory(csv_dir_path, return_filenames=True)
+        print(df_list)
+        interactive_visualization_from_multiple_dataframes(
+            dfs=df_list,
             plot_title="Face Detection Results",
             x_axis_df_column="Decade",
             y_axis_df_column="Percentage of Pages with Faces",
-            save_visualization=False,
-            add_regression=False,
         )
+    
+    else:
+        for df in df_list:
+            visualize_trend_by_time_from_df(
+                df=df,
+                plot_title="Face Detection Results",
+                x_axis_df_column="Decade",
+                y_axis_df_column="Percentage of Pages with Faces",
+                save_visualization=False,
+                add_regression=False,
+            )
 
 
 def get_df_by_newspaper_facial_recognition_metrics(
@@ -61,13 +89,22 @@ def get_df_by_newspaper_facial_recognition_metrics(
         df[df["Num Faces"] > 0].groupby("Decade").agg({"Page": "count"}).reset_index()
     )
 
-    # Merge the two dataframes on "Decade"
-    df = pd.merge(
+    # Create a DataFrame that includes all possible decades
+    all_decades = pd.DataFrame({"Decade": range(df["Decade"].min(), df["Decade"].max() + 1)})
+
+    # Merge the three dataframes on "Decade"
+    df = all_decades.merge(
         total_faces_and_pages,
+        on="Decade",
+        how="left"
+    ).merge(
         num_pages_with_faces,
         on="Decade",
-        suffixes=("_total", "_with_faces"),
+        how="left",
+        suffixes=("_total", "_with_faces")
     )
+    # Fill NaN values with 0
+    df.fillna(0, inplace=True)
 
     # Calculate the percentage of pages containing faces
     df[face_percentage_column_title] = df["Page_with_faces"] / df["Page_total"] * 100
@@ -241,5 +278,7 @@ def main():
     )
 
 
+
 if __name__ == "__main__":
-    main()
+    # main()
+    preload_and_visualize_results(visualization_method="group")

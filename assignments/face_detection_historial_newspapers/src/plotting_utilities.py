@@ -5,6 +5,7 @@ from data_processing_utilities import convert_string_to_snake_case
 import matplotlib.pyplot as plt
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import plotly.io as pio
 import seaborn as sns
 
@@ -101,3 +102,13 @@ def interactive_visualization_trend_by_time_from_df(
         )
     else:
         fig.show()
+
+
+def interactive_visualization_from_multiple_dataframes(dfs: Dict[str, pd.DataFrame], plot_title: str, x_axis_df_column: str, y_axis_df_column: str) -> None:
+    fig = go.Figure()
+
+    # Add traces for each dataframe
+    for df_name, df in dfs.items():
+        fig.add_trace(go.Scatter(x=df[x_axis_df_column], y=df[y_axis_df_column], name=df_name))
+
+    fig.show()

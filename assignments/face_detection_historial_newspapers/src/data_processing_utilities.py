@@ -1,9 +1,11 @@
 from collections import Counter
 from pathlib import Path
-from code_utilities import get_logger
+from typing import List, Union, Optional, Dict
 
 import glob
 import pandas as pd
+
+from code_utilities import get_logger
 
 logger = get_logger(__name__)
 
@@ -66,18 +68,21 @@ def export_df_as_csv(df: pd.DataFrame, directory: Path, filename: str):
     except Exception as e:
         logger.error(f"Unexpected error occurred when trying to write to file: {e}")
 
-def load_csv_as_df_from_directory(directory: Path) -> pd.DataFrame:
+def load_csv_as_df_from_directory(directory: Path, return_filenames: bool = False) -> Union[Dict[str, pd.DataFrame], List[pd.DataFrame]]:
     try:
         # Get a list of all CSV files in the directory
         csv_files = glob.glob(f"{directory}/*.csv")
 
-        # Load each CSV file into a DataFrame and store in a list
-        dataframes = [pd.read_csv(file) for file in csv_files]
+        # Load each CSV file into a DataFrame and store in a dictionary or list
+        if return_filenames:
+            dataframes = {Path(file).name: pd.read_csv(file) for file in csv_files}
+        else:
+            dataframes = [pd.read_csv(file) for file in csv_files]
 
         return dataframes
     except FileNotFoundError:
         logger.error(f"Directory not found: {directory}")
-        return []
+        return {}
     except Exception as e:
         logger.error(f"Unexpected error loading CSV files from directory: {e}")
         return []
