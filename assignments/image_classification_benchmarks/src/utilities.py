@@ -80,7 +80,7 @@ def save_classification_report(
     print(f"[INFO] Classification report saved as {file_name}")
 
 
-def preprocess_image_data(images_to_process: np.ndarray) -> np.ndarray:
+def preprocess_image(images_to_process: np.ndarray) -> np.ndarray:
     """
     Preprocesses image data by converting images to grayscale and normalizing pixel values.
 
@@ -92,11 +92,25 @@ def preprocess_image_data(images_to_process: np.ndarray) -> np.ndarray:
 
     """
     print("[INFO] Processing image data...")
-    processed_images = np.array(
-        [
-            normalize_pixel_values(convert_image_to_greyscale(image))
-            for image in tqdm(images_to_process, desc="Processing images")
-        ]
-    )
+    
+    # Initialize an empty list to store the processed images
+    processed_images = []
+
+    # Loop over each image in the input array
+    for image in tqdm(images_to_process, desc="Processing images"):
+        # Convert the image to grayscale
+        grayscale_image = convert_image_to_greyscale(image)
+        
+        # Normalize the pixel values of the image
+        scaled_image = grayscale_image / 255.0
+
+        # Flatten the image
+        flattened_image = scaled_image.flatten()
+        
+        # Add the processed image to the list
+        processed_images.append(flattened_image)
+
     print("[INFO] Image data has been processed!")
-    return np.array(processed_images).reshape(-1, 1024)
+    
+    # Convert the list of processed images to a numpy array and reshape it
+    return np.array(processed_images)

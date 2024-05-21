@@ -13,7 +13,7 @@ from utilities import (
     convert_dict_to_table,
     convert_labels_to_class_name,
     save_classification_report,
-    preprocess_image_data
+    preprocess_image,
 )
 
 # disable SSL certificate verification, not working for virtual environment
@@ -59,7 +59,7 @@ def train_and_fit_logistic_regression_classifier(
             random_state=24,
             max_iter=1000,
             verbose=True,
-            tol=0.1,
+            tol=0.001,
             multi_class="multinomial",
         ).fit(X_train, y_train)
 
@@ -100,8 +100,8 @@ def main():
     output_dir_path = Path(__file__).parent / ".." / "out" / "logistic_regression"
 
     # preprocess image data
-    X_train_processed = preprocess_image_data(X_train)
-    X_test_processed = preprocess_image_data(X_test)
+    X_train_processed = preprocess_image(X_train)
+    X_test_processed = preprocess_image(X_test)
     y_train_processed = convert_labels_to_class_name(
         np.ravel(y_train), cifar10_class_names
     )
@@ -133,11 +133,13 @@ def main():
     # predict test data
     y_pred = classifier.predict(X_test_processed)
 
+    final_classification_report = classification_report(
+        y_test_processed, y_pred, target_names=cifar10_label_conversion_table[:, 1]
+    )
     save_classification_report(
-        classification_report(
-            y_test_processed, y_pred, target_names=cifar10_label_conversion_table[:, 1]
-        ),
-        output_dir_path,
+        classification_report=final_classification_report,
+        output_dir=output_dir_path,
+        file_name="logistic_classification_report.txt",
     )
 
 
