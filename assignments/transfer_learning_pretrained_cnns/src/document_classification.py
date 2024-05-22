@@ -1,7 +1,7 @@
 from pathlib import Path
 
+import click
 from tensorflow.keras.callbacks import EarlyStopping
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from sklearn.metrics import classification_report
 
 
@@ -15,6 +15,7 @@ from utilities.data_processing_utilities import (
 from utilities.logging_utilities import get_logger
 
 from utilities.model_compilation_utilities import (
+    augment_training_data,
     compile_model,
     define_classification_layers,
     instantiate_optimizer,
@@ -50,22 +51,6 @@ def model_pipeline(
     return compiled_model
 
 
-def augment_training_data(use_augmentation=True):
-    if use_augmentation:
-        datagen = ImageDataGenerator(
-            rotation_range=20,
-            fill_mode="nearest",
-            brightness_range=[0.8, 1.2],
-            horizontal_flip=True,
-            validation_split=0.1,
-        )
-    else:
-        # does not modify data, ensures that the data is in the correct format for the model
-        datagen = ImageDataGenerator()
-
-    return datagen
-
-
 def save_classification_report(
     classification_report: str,
     output_dir: Path,
@@ -82,7 +67,37 @@ def save_classification_report(
     logger.info(f"Classification report saved as {file_name}")
 
 
-if __name__ == "__main__":
+@click.command()
+@click.option(
+    "--num_of_epochs",
+    "-e",
+    default=12,
+    type=int,
+    help="Number of epochs to train the model",
+)
+@click.option(
+    "--batch_size",
+    "-b",
+    default=128,
+    type=int,
+    help="Batch size for training the model",
+)
+@click.option(
+    "--optimizer_type",
+    "-o",
+    default="Adam",
+    help="Type of optimizer to use. Script is written to accept either SGD or Adam. Default is Adam.",
+)
+@click.option(
+    "--test_split_size",
+    "-t",
+    default=0.2,
+    type=float,
+    help="The proportion of the data to use for testing the model. Default is 0.2",
+)
+def main(
+    num_of_epochs: int, batch_size: int, optimizer_type: str, test_split_size: float
+):
     # Instantiate directory paths
     path_to_input_directory = Path(__file__).parent / ".." / "in"
     path_to_output_directory = Path(__file__).parent / ".." / "out"
@@ -92,12 +107,12 @@ if __name__ == "__main__":
     data_dir = initialize_data_directory(path_to_input_directory)
 
     # Instantiate model architecture
-    model = model_pipeline(optimizer_type="Adam")
+    model = model_pipeline(optimizer_type=optimizer_type)
 
     # Load and preprocess training data, split data, binarize labels
     X, y = load_and_preprocess_training_data(data_dir)
     X_train, X_test, y_train, y_test = split_data(
-        X, y, test_size=0.2, validation_size=None
+        X, y, test_size=test_split_size, validation_size=None, stratify=y
     )
     y_train, y_test = binarize_and_fit_labels(y_train, y_test)
 
@@ -105,15 +120,17 @@ if __name__ == "__main__":
     data_gen = augment_training_data(use_augmentation=True)
 
     # Early stopping functionality
-    early_stopping = EarlyStopping(monitor="val_loss", patience=3, verbose=1, mode="auto")
+    early_stopping = EarlyStopping(
+        monitor="val_loss", patience=3, verbose=1, mode="auto"
+    )
     # Fit model to training data
     logger.info("Starting model training.")
     H = model.fit(
-        data_gen.flow(X_train, y_train, batch_size=128),
+        data_gen.flow(X_train, y_train, batch_size=batch_size),
         validation_data=data_gen.flow(
-            X_train, y_train, batch_size=128, subset="validation"
+            X_train, y_train, batch_size=batch_size, subset="validation"
         ),
-        epochs=20,
+        epochs=num_of_epochs,
         verbose=1,
         callbacks=[early_stopping],
     )
@@ -121,7 +138,7 @@ if __name__ == "__main__":
 
     save_trained_model(model, path_to_model_directory, model_format="keras")
 
-    predictions = model.predict(X_test, batch_size=128)
+    predictions = model.predict(X_test, batch_size=batch_size)
     labels = get_unique_labels_from_subdirs(data_dir)
 
     VGG16_report = classification_report(
@@ -134,11 +151,16 @@ if __name__ == "__main__":
     save_classification_report(
         VGG16_report, path_to_output_directory, file_name="VGG16_tobacco_report.txt"
     )
+
     plot_history(
         H,
-        num_of_epochs=20,
+        num_of_epochs=num_of_epochs,
         save_plot=True,
         output_dir="out",
         plot_name="VGG16_tobacco_plot",
         plot_format="pdf",
     )
+
+
+if __name__ == "__main__":
+    main()

@@ -69,20 +69,20 @@ def load_and_preprocess_training_data(data_path: Path) -> Tuple[np.ndarray, np.n
         return None, None
 
 
-def split_data(X, y, test_size: float = 0.20, validation_size: float = None):
+def split_data(X, y, test_size: float = 0.20, validation_size: float = None, stratify=None):
     if validation_size is None:
         # Only split the data into a training set and a test set
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, stratify=stratify)
         return X_train, X_test, y_train, y_test
     else:
         # First split to separate out the training set
         X_train, X_temp, y_train, y_temp = train_test_split(
-            X, y, test_size=test_size + validation_size
+            X, y, test_size=test_size + validation_size, stratify=stratify
         )
 
         # Second split to separate out the validation and test sets
         X_val, X_test, y_val, y_test = train_test_split(
-            X_temp, y_temp, test_size=test_size / (test_size + validation_size)
+            X_temp, y_temp, test_size=test_size / (test_size + validation_size), stratify=y_temp if stratify is not None else None
         )
 
         return X_train, X_val, X_test, y_train, y_val, y_test

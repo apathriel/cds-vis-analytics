@@ -5,11 +5,27 @@ from tensorflow.keras.layers import BatchNormalization, Dense, Dropout, Flatten
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.optimizers.schedules import ExponentialDecay
 from tensorflow.keras.optimizers import Adam, SGD
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 from .logging_utilities import get_logger
 
 logger = get_logger(__name__)
 
+
+def augment_training_data(use_augmentation=True):
+    if use_augmentation:
+        datagen = ImageDataGenerator(
+            rotation_range=20,
+            fill_mode="nearest",
+            brightness_range=[0.8, 1.2],
+            horizontal_flip=True,
+            validation_split=0.1,
+        )
+    else:
+        # does not modify data, ensures that the data is in the correct format for the model
+        datagen = ImageDataGenerator()
+
+    return datagen
 
 def load_saved_model(model_path):
     logger.info(f"Loading model from {model_path}")
