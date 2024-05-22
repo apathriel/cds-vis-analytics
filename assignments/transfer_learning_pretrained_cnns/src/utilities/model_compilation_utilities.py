@@ -6,7 +6,7 @@ from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.optimizers.schedules import ExponentialDecay
 from tensorflow.keras.optimizers import Adam, SGD
 
-from logger_utils import get_logger
+from .logging_utilities import get_logger
 
 logger = get_logger(__name__)
 

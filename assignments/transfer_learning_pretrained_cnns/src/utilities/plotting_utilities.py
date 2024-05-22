@@ -3,7 +3,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 
-from logger_utils import get_logger
+from .logging_utilities import get_logger
 
 logger = get_logger(__name__)
 

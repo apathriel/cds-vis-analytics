@@ -11,7 +11,7 @@ import shutil
 from typing import *
 
 import aiofiles.os
-from logger_utils import get_logger
+from assignments.transfer_learning_pretrained_cnns.src.utilities.logger_utilities import get_logger
 import kaggle
 from kaggle.api.kaggle_api_extended import KaggleApi
 

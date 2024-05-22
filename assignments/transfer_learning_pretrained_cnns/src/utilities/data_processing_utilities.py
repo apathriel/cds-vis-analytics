@@ -11,7 +11,7 @@ from tensorflow.keras.preprocessing.image import (
 )
 from tqdm import tqdm
 
-from logger_utils import get_logger
+from .logging_utilities import get_logger
 
 logger = get_logger(__name__)
 

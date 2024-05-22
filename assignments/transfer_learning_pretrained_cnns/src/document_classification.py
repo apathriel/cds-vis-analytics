@@ -4,16 +4,16 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from sklearn.metrics import classification_report
 
 
-from data_processing_utilities import (
+from utilities.data_processing_utilities import (
     binarize_and_fit_labels,
     get_unique_labels_from_subdirs,
     initialize_data_directory,
     load_and_preprocess_training_data,
     split_data,
 )
-from logger_utils import get_logger
+from utilities.logging_utilities import get_logger
 
-from model_compilation_utilities import (
+from utilities.model_compilation_utilities import (
     compile_model,
     define_classification_layers,
     instantiate_optimizer,
@@ -21,7 +21,7 @@ from model_compilation_utilities import (
     load_saved_model,
     save_trained_model,
 )
-from plotting_utilities import plot_history
+from utilities.plotting_utilities import plot_history
 
 # Logging setup
 logger = get_logger(__name__)
