@@ -132,7 +132,7 @@ if __name__ == "__main__":
     )
     plot_history(
         H,
-        10,
+        num_of_epochs=20,
         save_plot=True,
         output_dir="out",
         plot_name="VGG16_tobacco_plot",
