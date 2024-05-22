@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from sklearn.metrics import classification_report
 
@@ -103,6 +104,8 @@ if __name__ == "__main__":
     # Augment training data, will only modify training data if use_augmentation is True
     data_gen = augment_training_data(use_augmentation=True)
 
+    # Early stopping functionality
+    early_stopping = EarlyStopping(monitor="val_loss", patience=3, verbose=1, mode="auto")
     # Fit model to training data
     logger.info("Starting model training.")
     H = model.fit(
@@ -112,6 +115,7 @@ if __name__ == "__main__":
         ),
         epochs=20,
         verbose=1,
+        callbacks=[early_stopping],
     )
     logger.info("Model training completed.")
 
