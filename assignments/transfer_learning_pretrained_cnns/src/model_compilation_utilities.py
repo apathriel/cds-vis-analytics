@@ -46,7 +46,7 @@ def define_classification_layers(
     # Activation layer with 128 neurons, relu activation.
     class1 = Dense(128, activation="relu")(bn)
     # Optionally apply dropout
-    dropout = Dropout(0.5)(class1) if dropout_layer else class1
+    dropout = Dropout(0.1)(class1) if dropout_layer else class1
     # Output layer neurons, softmax activation.
     output = Dense(10, activation="softmax")(dropout)
     model = Model(inputs=model.inputs, outputs=output)
