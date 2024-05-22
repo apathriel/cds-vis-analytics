@@ -27,16 +27,25 @@ from plotting_utilities import plot_history
 logger = get_logger(__name__)
 
 
-def model_pipeline(model_path: Path = None, load_existing_model: bool = False, output_model_summary: bool = False, optimizer_type: str = "Adam"):
+def model_pipeline(
+    model_path: Path = None,
+    load_existing_model: bool = False,
+    output_model_summary: bool = False,
+    optimizer_type: str = "Adam",
+):
     if load_existing_model:
         logger.info(f"Loading model from {model_path}")
         if not model_path.exists():
             raise FileNotFoundError(f"No model found at {model_path}")
         return load_saved_model(model_path)
-    
+
     optimizer = instantiate_optimizer(optimizer_type=optimizer_type)
     model = define_classification_layers(instantiate_VGG16_model())
     compiled_model = compile_model(model, optimizer)
+
+    if output_model_summary:
+        logger.info(compiled_model.summary())
+
     return compiled_model
 
 
@@ -44,8 +53,10 @@ def augment_training_data(X_train, y_train, use_augmentation=True):
     if use_augmentation:
         datagen = ImageDataGenerator(
             rotation_range=20,
-            #width_shift_range=0.2,
-            #height_shift_range=0.2,
+            width_shift_range=0.2,
+            height_shift_range=0.2,
+            shear_range=0.2,
+            zoom_range=0.2,
             fill_mode="nearest",
             brightness_range=[0.8, 1.2],
             horizontal_flip=True,
@@ -60,8 +71,12 @@ def augment_training_data(X_train, y_train, use_augmentation=True):
     return data_gen
 
 
-
-def save_classification_report(classification_report: str, output_dir: Path, log_output: bool =True, file_name: str = "VGG16_tobacco_report.txt"):
+def save_classification_report(
+    classification_report: str,
+    output_dir: Path,
+    log_output: bool = True,
+    file_name: str = "VGG16_tobacco_report.txt",
+):
     if log_output:
         logger.info(f"Classification Report:\n{classification_report}")
 
@@ -84,7 +99,6 @@ if __name__ == "__main__":
     model = model_pipeline(optimizer_type="Adam")
 
     X, y = load_and_preprocess_training_data(data_dir)
-    print(X.shape, y.shape)
     X_train, X_val, X_test, y_train, y_val, y_test = split_data(X, y)
     y_train, y_val, y_test = binarize_and_fit_labels(y_train, y_val, y_test)
 
