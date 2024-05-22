@@ -45,10 +45,10 @@ cd image_classification_benchmarks
 ```sh
 bash setup_unix.sh
 ```
-4. Activate virtual environment, or run main py scripts through run_log and run_neural
+4. Activate virtual environment (OS-specific) and run main py scripts.
 ```sh
+source env/bin/activate
 python src/logistic_regression.py
-bash run_neural.sh
 ```
 
 ### 🚀 Usage
@@ -74,7 +74,7 @@ Please refer to the respective classification reports for the full reports.
 
 The results were produced using the following hyperparameters. They were identified and initiated through a mix of trial-and-error, summatively evaluated through a grid search, specifically implemented through scikit-learn's `GridSearchCV`.
 
-   #### Logistic Regression
+   #### [Logistic Regression](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html)
 
 | Hyperparameter   | Value       |
 |-------------|-------------|
@@ -85,7 +85,7 @@ The results were produced using the following hyperparameters. They were identif
 | tol         | 0.001       |
 | multi_class | "multinomial"|
 
-#### Neural Network
+#### [Neural Network](https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPClassifier.html)
 
 | Hyperparameter          | Value       |
 |--------------------|-------------|
