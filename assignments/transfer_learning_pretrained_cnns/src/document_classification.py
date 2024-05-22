@@ -53,10 +53,6 @@ def augment_training_data(use_augmentation=True):
     if use_augmentation:
         datagen = ImageDataGenerator(
             rotation_range=20,
-            width_shift_range=0.2,
-            height_shift_range=0.2,
-            shear_range=0.2,
-            zoom_range=0.2,
             fill_mode="nearest",
             brightness_range=[0.8, 1.2],
             horizontal_flip=True,
@@ -114,7 +110,7 @@ if __name__ == "__main__":
         validation_data=data_gen.flow(
             X_train, y_train, batch_size=128, subset="validation"
         ),
-        epochs=10,
+        epochs=20,
         verbose=1,
     )
     logger.info("Model training completed.")
