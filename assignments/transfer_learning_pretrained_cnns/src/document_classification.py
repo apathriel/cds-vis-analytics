@@ -96,14 +96,18 @@ if __name__ == "__main__":
     # Initialize data directory
     data_dir = initialize_data_directory(path_to_input_directory)
 
+    # Instantiate model architecture
     model = model_pipeline(optimizer_type="Adam")
 
+    # Load and preprocess training data, split data, binarize labels
     X, y = load_and_preprocess_training_data(data_dir)
-    X_train, X_val, X_test, y_train, y_val, y_test = split_data(X, y)
+    X_train, X_val, X_test, y_train, y_val, y_test = split_data(X, y, test_size=0.2, validation_size=0.1)
     y_train, y_val, y_test = binarize_and_fit_labels(y_train, y_val, y_test)
 
+    # Augment training data, will only modify training data if use_augmentation is True
     data_gen = augment_training_data(X_train, y_train, use_augmentation=True)
 
+    # Fit model to training data
     logger.info("Starting model training.")
     H = model.fit(
         data_gen, validation_data=(X_val, y_val), batch_size=128, epochs=10, verbose=1
