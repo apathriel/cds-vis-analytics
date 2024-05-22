@@ -49,7 +49,7 @@ def model_pipeline(
     return compiled_model
 
 
-def augment_training_data(X_train, y_train, use_augmentation=True):
+def augment_training_data(use_augmentation=True):
     if use_augmentation:
         datagen = ImageDataGenerator(
             rotation_range=20,
@@ -66,9 +66,7 @@ def augment_training_data(X_train, y_train, use_augmentation=True):
         # does not modify data, ensures that the data is in the correct format for the model
         datagen = ImageDataGenerator()
 
-    data_gen = datagen.flow(X_train, y_train, batch_size=128)
-
-    return data_gen
+    return datagen
 
 
 def save_classification_report(
@@ -101,16 +99,23 @@ if __name__ == "__main__":
 
     # Load and preprocess training data, split data, binarize labels
     X, y = load_and_preprocess_training_data(data_dir)
-    X_train, X_val, X_test, y_train, y_val, y_test = split_data(X, y, test_size=0.2, validation_size=0.1)
-    y_train, y_val, y_test = binarize_and_fit_labels(y_train, y_val, y_test)
+    X_train, X_test, y_train, y_test = split_data(
+        X, y, test_size=0.2, validation_size=None
+    )
+    y_train, y_test = binarize_and_fit_labels(y_train, y_test)
 
     # Augment training data, will only modify training data if use_augmentation is True
-    data_gen = augment_training_data(X_train, y_train, use_augmentation=True)
+    data_gen = augment_training_data(use_augmentation=True)
 
     # Fit model to training data
     logger.info("Starting model training.")
     H = model.fit(
-        data_gen, validation_data=(X_val, y_val), batch_size=128, epochs=10, verbose=1
+        data_gen.flow(X_train, y_train, batch_size=128),
+        validation_data=data_gen.flow(
+            X_train, y_train, batch_size=128, subset="validation"
+        ),
+        epochs=10,
+        verbose=1,
     )
     logger.info("Model training completed.")
 

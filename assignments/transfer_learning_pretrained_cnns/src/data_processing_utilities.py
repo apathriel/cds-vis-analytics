@@ -88,9 +88,14 @@ def split_data(X, y, test_size: float = 0.20, validation_size: float = None):
         return X_train, X_val, X_test, y_train, y_val, y_test
 
 
-def binarize_and_fit_labels(y_train, y_val, y_test):
+def binarize_and_fit_labels(y_train, y_test, val_split=None):
     lb = LabelBinarizer()
     y_train = lb.fit_transform(y_train)
-    y_val = lb.transform(y_val)
     y_test = lb.transform(y_test)
-    return y_train, y_val, y_test
+
+    if val_split is not None:
+        y_train, y_val = train_test_split(y_train, test_size=val_split, stratify=y_train)
+
+        return y_train, y_val, y_test
+
+    return y_train, y_test
