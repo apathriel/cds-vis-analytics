@@ -9,8 +9,7 @@ from code_utilities import get_logger
 
 logger = get_logger(__name__)
 
-def convert_string_to_snake_case(input_string: str) -> str:
-    return input_string.lower().replace(" ", "_")
+
 
 def summarize_file_types(directory: Path) -> None:
     file_types = Counter()
@@ -86,3 +85,58 @@ def load_csv_as_df_from_directory(directory: Path, return_filenames: bool = Fals
     except Exception as e:
         logger.error(f"Unexpected error loading CSV files from directory: {e}")
         return []
+    
+def get_df_by_newspaper_facial_recognition_metrics(
+    df: pd.DataFrame, face_percentage_column_title: str
+) -> pd.DataFrame:
+    # Calculate total number of faces and total number of pages for each decade
+    total_faces_and_pages = (
+        df.groupby("Decade").agg({"Num Faces": "sum", "Page": "count"}).reset_index()
+    )
+
+    # Calculate number of pages that contain at least one face for each decade
+    num_pages_with_faces = (
+        df[df["Num Faces"] > 0].groupby("Decade").agg({"Page": "count"}).reset_index()
+    )
+
+    # Create a DataFrame that includes all possible decades
+    all_decades = pd.DataFrame(
+        {"Decade": range(df["Decade"].min(), df["Decade"].max() + 1)}
+    )
+
+    # Merge the three dataframes on "Decade"
+    df = all_decades.merge(total_faces_and_pages, on="Decade", how="left").merge(
+        num_pages_with_faces,
+        on="Decade",
+        how="left",
+        suffixes=("_total", "_with_faces"),
+    )
+    # Fill NaN values with 0
+    df.fillna(0, inplace=True)
+
+    # Calculate the percentage of pages containing faces
+    df[face_percentage_column_title] = df["Page_with_faces"] / df["Page_total"] * 100
+
+    # Calculate the total number of pages across all decades
+    total_pages_all_decades = df["Page_total"].sum()
+
+    # Add a new column for the weighted analysis
+    df["Weighted Analysis"] = (
+        df[face_percentage_column_title] * df["Page_total"] / total_pages_all_decades
+    )
+
+    # Calculate the minimum + range of the "Weighted Analysis" column
+    min_weighted_analysis = df["Weighted Analysis"].min()
+    range_weighted_analysis = df["Weighted Analysis"].max() - min_weighted_analysis
+
+    # Normalize the "Weighted Analysis" column
+    df["Normalized Weighted Analysis"] = (
+        df["Weighted Analysis"] - min_weighted_analysis
+    ) / range_weighted_analysis
+
+    # Rename the columns
+    df = df.rename(
+        columns={"Page_total": "Total Pages", "Page_with_faces": "Num Pages with Faces"}
+    )
+
+    return df

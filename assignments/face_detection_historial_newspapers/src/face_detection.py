@@ -3,28 +3,28 @@ from itertools import islice
 from pathlib import Path
 from typing import Dict
 
-from facenet_pytorch import MTCNN, InceptionResnetV1
-from code_utilities import (
-    get_logger,
-    timing_decorator
-)
+from PIL import Image
+from PIL import UnidentifiedImageError
+import pandas as pd
+from facenet_pytorch import InceptionResnetV1, MTCNN
+from tqdm import tqdm as tqdm_bar
+
+from base_utilities import get_tqdm_parameters
+
+from code_utilities import get_logger, timing_decorator
 
 from data_processing_utilities import (
     extract_metadata_from_filename,
     export_df_as_csv,
+    get_df_by_newspaper_facial_recognition_metrics,
     get_num_files_in_directory,
-    load_csv_as_df_from_directory,
 )
-import pandas as pd
+
 from plotting_utilities import (
     construct_visualization_parameters,
+    preload_and_visualize_results,
     visualize_trend_by_time_from_df,
-    interactive_visualization_trend_by_time_from_df,
-    interactive_visualization_from_multiple_dataframes,
 )
-from PIL import Image
-from PIL import UnidentifiedImageError
-from tqdm import tqdm as tqdm_bar
 
 logger = get_logger(__name__)
 
@@ -33,106 +33,6 @@ FACE_RECOGNITION_MTCNN = MTCNN(keep_all=True)
 
 # Load pre-trained FaceNet model
 RESNET = InceptionResnetV1(pretrained="casia-webface").eval()
-
-def get_first_element(filename, split_character='_'):
-    return filename.split(split_character)[0]
-
-def get_first_element_from_filename(file_path: Path, split_character) -> str:
-    return file_path.name.split(split_character)[0]
-
-def preload_and_visualize_results(
-    csv_dir_path: Path = Path(__file__).parent / ".." / "out" / "csv_results",
-visualization_method: str = None) -> None:
-    df_list = load_csv_as_df_from_directory(csv_dir_path)
-    
-    if visualization_method == "interactive":
-        for df in df_list:
-            interactive_visualization_trend_by_time_from_df(
-                df=df,
-                plot_title="Face Detection Results",
-                x_axis_df_column="Decade",
-                y_axis_df_column="Percentage of Pages with Faces",
-                save_visualization=False,
-            )
-    elif visualization_method == "group":
-        df_list = load_csv_as_df_from_directory(csv_dir_path, return_filenames=True)
-        print(df_list)
-        interactive_visualization_from_multiple_dataframes(
-            dfs=df_list,
-            plot_title="Face Detection Results",
-            x_axis_df_column="Decade",
-            y_axis_df_column="Percentage of Pages with Faces",
-        )
-    
-    else:
-        for df in df_list:
-            visualize_trend_by_time_from_df(
-                df=df,
-                plot_title="Face Detection Results",
-                x_axis_df_column="Decade",
-                y_axis_df_column="Percentage of Pages with Faces",
-                save_visualization=False,
-                add_regression=False,
-            )
-
-
-def get_df_by_newspaper_facial_recognition_metrics(
-    df: pd.DataFrame, face_percentage_column_title: str
-) -> pd.DataFrame:
-    # Calculate total number of faces and total number of pages for each decade
-    total_faces_and_pages = (
-        df.groupby("Decade").agg({"Num Faces": "sum", "Page": "count"}).reset_index()
-    )
-
-    # Calculate number of pages that contain at least one face for each decade
-    num_pages_with_faces = (
-        df[df["Num Faces"] > 0].groupby("Decade").agg({"Page": "count"}).reset_index()
-    )
-
-    # Create a DataFrame that includes all possible decades
-    all_decades = pd.DataFrame({"Decade": range(df["Decade"].min(), df["Decade"].max() + 1)})
-
-    # Merge the three dataframes on "Decade"
-    df = all_decades.merge(
-        total_faces_and_pages,
-        on="Decade",
-        how="left"
-    ).merge(
-        num_pages_with_faces,
-        on="Decade",
-        how="left",
-        suffixes=("_total", "_with_faces")
-    )
-    # Fill NaN values with 0
-    df.fillna(0, inplace=True)
-
-    # Calculate the percentage of pages containing faces
-    df[face_percentage_column_title] = df["Page_with_faces"] / df["Page_total"] * 100
-
-    # Calculate the total number of pages across all decades
-    total_pages_all_decades = df["Page_total"].sum()
-
-    # Add a new column for the weighted analysis
-    df["Weighted Analysis"] = (
-        df[face_percentage_column_title] * df["Page_total"] / total_pages_all_decades
-    )
-
-    # Calculate the minimum + range of the "Weighted Analysis" column
-    min_weighted_analysis = df["Weighted Analysis"].min()
-    range_weighted_analysis = df["Weighted Analysis"].max() - min_weighted_analysis
-
-    # Normalize the "Weighted Analysis" column
-    df["Normalized Weighted Analysis"] = (
-        df["Weighted Analysis"] - min_weighted_analysis
-    ) / range_weighted_analysis
-
-    # Rename the columns
-    df = df.rename(
-        columns={"Page_total": "Total Pages", "Page_with_faces": "Num Pages with Faces"}
-    )
-
-    return df
-
 
 def newspaper_image_face_recognition_and_extract_metadata(image_path: Path) -> dict:
     try:
@@ -200,6 +100,7 @@ def process_images_in_directory_and_create_dataframe(
     )
     return df
 
+
 @timing_decorator
 def facial_recognition_newspaper_image_pipeline(
     input_directory_path: Path,
@@ -259,13 +160,7 @@ def main():
         "img_format": "pdf",
     }
 
-    TQDM_PARAMS = {
-        "desc": "Processing images",
-        "leave": True,
-        "ncols": 100,
-        "unit": "image",
-        "unit_scale": True,
-    }
+    TQDM_PARAMS = get_tqdm_parameters()
 
     facial_recognition_newspaper_image_pipeline(
         input_directory_path=newspaper_input_directory,
@@ -278,7 +173,11 @@ def main():
     )
 
 
-
 if __name__ == "__main__":
-    # main()
-    preload_and_visualize_results(visualization_method="group")
+    main()
+
+    # Interactive plot of all face detection results by newspaper
+    # preload_and_visualize_results(visualization_method="group")
+
+    # Visualize all face detection results by newspaper
+    # preload_and_visualize_results()

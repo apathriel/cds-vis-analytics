@@ -1,13 +1,18 @@
 from pathlib import Path
 from typing import Dict
 
-from data_processing_utilities import convert_string_to_snake_case
 import matplotlib.pyplot as plt
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import plotly.io as pio
 import seaborn as sns
+
+from base_utilities import convert_string_to_snake_case
+
+from data_processing_utilities import (
+    load_csv_as_df_from_directory,
+)
 
 
 def construct_visualization_parameters(
@@ -104,11 +109,55 @@ def interactive_visualization_trend_by_time_from_df(
         fig.show()
 
 
-def interactive_visualization_from_multiple_dataframes(dfs: Dict[str, pd.DataFrame], plot_title: str, x_axis_df_column: str, y_axis_df_column: str) -> None:
+def interactive_visualization_from_multiple_dataframes(
+    dfs: Dict[str, pd.DataFrame],
+    plot_title: str,
+    x_axis_df_column: str,
+    y_axis_df_column: str,
+) -> None:
     fig = go.Figure()
 
     # Add traces for each dataframe
     for df_name, df in dfs.items():
-        fig.add_trace(go.Scatter(x=df[x_axis_df_column], y=df[y_axis_df_column], name=df_name))
+        fig.add_trace(
+            go.Scatter(x=df[x_axis_df_column], y=df[y_axis_df_column], name=df_name)
+        )
 
     fig.show()
+
+
+def preload_and_visualize_results(
+    csv_dir_path: Path = Path(__file__).parent / ".." / "out" / "csv_results",
+    visualization_method: str = None,
+) -> None:
+    df_list = load_csv_as_df_from_directory(csv_dir_path)
+
+    if visualization_method == "interactive":
+        for df in df_list:
+            interactive_visualization_trend_by_time_from_df(
+                df=df,
+                plot_title="Face Detection Results",
+                x_axis_df_column="Decade",
+                y_axis_df_column="Percentage of Pages with Faces",
+                save_visualization=False,
+            )
+    elif visualization_method == "group":
+        df_list = load_csv_as_df_from_directory(csv_dir_path, return_filenames=True)
+        print(df_list)
+        interactive_visualization_from_multiple_dataframes(
+            dfs=df_list,
+            plot_title="Face Detection Results",
+            x_axis_df_column="Decade",
+            y_axis_df_column="Percentage of Pages with Faces",
+        )
+
+    else:
+        for df in df_list:
+            visualize_trend_by_time_from_df(
+                df=df,
+                plot_title="Face Detection Results",
+                x_axis_df_column="Decade",
+                y_axis_df_column="Percentage of Pages with Faces",
+                save_visualization=False,
+                add_regression=False,
+            )
