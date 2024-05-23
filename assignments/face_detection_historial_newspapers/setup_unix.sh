@@ -2,9 +2,9 @@
 
 python -m pip install --user virtualenv
 
-python -m virtualenv va04_env
+python -m virtualenv env
 
-source ./va03_env/bin/activate
+source ./env/bin/activate
 
 pip install --upgrade pip
 pip install -r requirements.txt
