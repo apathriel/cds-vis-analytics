@@ -52,16 +52,17 @@ def plot_history(
         raise ValueError(f"plot_format must be one of {valid_output_formats}")
     
     if isinstance(H, History):
+        H = H.history
         num_of_epochs = len(H.history['loss'])
     elif isinstance(H, dict):
         num_of_epochs = num_of_csv_rows
-
+    
     plt.figure(figsize=(12, 6))
     plt.subplot(1, 2, 1)
-    plt.plot(np.arange(0, num_of_epochs), H.history["loss"], label="train_loss")
+    plt.plot(np.arange(0, num_of_epochs), H["loss"], label="train_loss")
     plt.plot(
         np.arange(0, num_of_epochs),
-        H.history["val_loss"],
+        H["val_loss"],
         label="val_loss",
         linestyle=":",
     )
@@ -70,12 +71,12 @@ def plot_history(
     plt.ylabel("Loss")
     plt.tight_layout()
     plt.legend()
-
+    
     plt.subplot(1, 2, 2)
-    plt.plot(np.arange(0, num_of_epochs), H.history["accuracy"], label="train_acc")
+    plt.plot(np.arange(0, num_of_epochs), H["accuracy"], label="train_acc")
     plt.plot(
         np.arange(0, num_of_epochs),
-        H.history["val_accuracy"],
+        H["val_accuracy"],
         label="val_acc",
         linestyle=":",
     )
