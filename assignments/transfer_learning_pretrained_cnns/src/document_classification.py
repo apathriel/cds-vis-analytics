@@ -218,7 +218,6 @@ def main(
 
     plot_history(
         H,
-        num_of_epochs=num_of_epochs,
         save_plot=True,
         output_dir="out",
         plot_name="VGG16_tobacco_plot",
