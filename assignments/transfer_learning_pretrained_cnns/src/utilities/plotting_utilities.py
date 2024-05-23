@@ -11,7 +11,6 @@ logger = get_logger(__name__)
 
 def plot_history(
     H: History,
-    num_of_epochs: int,
     save_plot: bool = False,
     output_dir: str = "out",
     plot_name: str = "VGG16_tobacco_plot",
@@ -49,6 +48,8 @@ def plot_history(
     ]
     if plot_format not in valid_output_formats:
         raise ValueError(f"plot_format must be one of {valid_output_formats}")
+    
+    num_of_epochs = len(H.history['loss'])
 
     plt.figure(figsize=(12, 6))
     plt.subplot(1, 2, 1)
