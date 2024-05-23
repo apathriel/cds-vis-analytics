@@ -31,7 +31,8 @@ logger = get_logger(__name__)
 
 
 def model_pipeline(
-    model_path: Path = None,
+    model_directory: Path = None,
+    model_file_name: str = None,
     load_existing_model: bool = False,
     output_model_summary: bool = False,
     optimizer_type: str = "Adam",
@@ -49,7 +50,8 @@ def model_pipeline(
         compiled_model: The compiled model for document classification.
     """
     if load_existing_model:
-        logger.info(f"Loading model from {model_path}")
+        model_path = model_directory / model_file_name
+        logger.info(f"Loading model from {model}")
         if not model_path.exists():
             raise FileNotFoundError(f"No model found at {model_path}")
         return load_saved_model(model_path)
@@ -117,8 +119,37 @@ def save_classification_report(
     type=float,
     help="The proportion of the data to use for testing the model. Default is 0.2",
 )
+@click.option(
+    "--print_model_summary",
+    "-p",
+    is_flag=True,
+    default=False,
+    type=bool,
+    help="Flag determining whether to print the model summary",
+)
+@click.option(
+    "--use_saved_model",
+    "-s",
+    is_flag=True,
+    default=False,
+    type=bool,
+    help="Flag determining whether to use a saved model",
+)
+@click.option(
+    "--model_title",
+    "-m",
+    default="VGG16_tobacco_model.keras",
+    type=str,
+    help="The file name of the saved model. Default is VGG16_tobacco_model.keras. Must be placed in out/models directory.",
+)
 def main(
-    num_of_epochs: int, batch_size: int, optimizer_type: str, test_split_size: float
+    num_of_epochs: int,
+    batch_size: int,
+    optimizer_type: str,
+    test_split_size: float,
+    print_model_summary: bool,
+    use_saved_model: bool,
+    model_title: str,
 ):
     # Instantiate directory paths
     path_to_input_directory = Path(__file__).parent / ".." / "in"
@@ -129,36 +160,42 @@ def main(
     data_dir = initialize_data_directory(path_to_input_directory)
 
     # Instantiate model architecture
-    model = model_pipeline(optimizer_type=optimizer_type)
-
-    # Load and preprocess training data, split data, binarize labels
-    X, y = load_and_preprocess_training_data(data_dir)
-    X_train, X_test, y_train, y_test = split_data(
-        X, y, test_size=test_split_size, validation_size=None, stratify=y
+    model = model_pipeline(
+        model_directory=path_to_model_directory,
+        model_file_name=model_title,
+        optimizer_type=optimizer_type,
+        output_model_summary=print_model_summary,
     )
-    y_train, y_test = binarize_and_fit_labels(y_train, y_test)
 
-    # Augment training data, will only modify training data if use_augmentation is True
-    data_gen = augment_training_data(use_augmentation=True)
+    if not use_saved_model:
+        # Load and preprocess training data, split data, binarize labels
+        X, y = load_and_preprocess_training_data(data_dir)
+        X_train, X_test, y_train, y_test = split_data(
+            X, y, test_size=test_split_size, validation_size=None, stratify=y
+        )
+        y_train, y_test = binarize_and_fit_labels(y_train, y_test)
 
-    # Early stopping functionality
-    early_stopping = EarlyStopping(
-        monitor="val_loss", patience=3, verbose=1, mode="auto"
-    )
-    # Fit model to training data
-    logger.info("Starting model training.")
-    H = model.fit(
-        data_gen.flow(X_train, y_train, batch_size=batch_size),
-        validation_data=data_gen.flow(
-            X_train, y_train, batch_size=batch_size, subset="validation"
-        ),
-        epochs=num_of_epochs,
-        verbose=1,
-        callbacks=[early_stopping],
-    )
-    logger.info("Model training completed.")
+        # Augment training data, will only modify training data if use_augmentation is True
+        data_gen = augment_training_data(use_augmentation=True)
 
-    save_trained_model(model, path_to_model_directory, model_format="keras")
+        # Early stopping functionality
+        early_stopping = EarlyStopping(
+            monitor="val_loss", patience=3, verbose=1, mode="auto"
+        )
+        # Fit model to training data
+        logger.info("Starting model training.")
+        H = model.fit(
+            data_gen.flow(X_train, y_train, batch_size=batch_size),
+            validation_data=data_gen.flow(
+                X_train, y_train, batch_size=batch_size, subset="validation"
+            ),
+            epochs=num_of_epochs,
+            verbose=1,
+            callbacks=[early_stopping],
+        )
+        logger.info("Model training completed.")
+
+        save_trained_model(model, path_to_model_directory, model_format="keras")
 
     predictions = model.predict(X_test, batch_size=batch_size)
     labels = get_unique_labels_from_subdirs(data_dir)
