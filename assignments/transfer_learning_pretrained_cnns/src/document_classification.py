@@ -58,6 +58,7 @@ def model_pipeline(
             raise FileNotFoundError(f"No model found at {model_path}")
         return load_saved_model(model_path)
 
+    logger.info("Creating new model...")
     optimizer = instantiate_optimizer(optimizer_type=optimizer_type)
     model = define_classification_layers(instantiate_VGG16_model())
     compiled_model = compile_model(model, optimizer)

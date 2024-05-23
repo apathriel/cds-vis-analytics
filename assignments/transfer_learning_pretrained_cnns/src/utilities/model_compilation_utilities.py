@@ -80,7 +80,6 @@ def load_saved_model(model_path: Path) -> Model:
     Returns:
         keras.models.Model: The loaded model.
     """
-    logger.info(f"Loading model from {model_path}")
     return load_model(model_path)
 
 
