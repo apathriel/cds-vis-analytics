@@ -53,7 +53,7 @@ def plot_history(
     
     if isinstance(H, History):
         H = H.history
-        num_of_epochs = len(H.history['loss'])
+        num_of_epochs = len(H['loss'])
     elif isinstance(H, dict):
         num_of_epochs = num_of_csv_rows
     

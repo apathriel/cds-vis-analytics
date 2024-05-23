@@ -27,12 +27,12 @@ def load_model_history_as_dict(input_directory: Path, file_name: str) -> dict:
     try:
         hist_df = pd.read_csv(input_directory / f"{file_name}.csv")
         number_of_rows = hist_df.shape[0]
-        logger.info(f"Model history saved as {file_name}")
-        return hist_df.to_dict(), number_of_rows
+        logger.info(f"Model history loaded from {file_name}.csv")
+        return hist_df.to_dict('list'), number_of_rows
     except Exception as e:
         logger.error(f"Error in load_model_history_as_dict: {e}")
         return None
-
+    
 def save_model_history(H: History, output_directory: Path, file_name: str) -> None:
     """
     Save the training history to a file.
@@ -42,6 +42,7 @@ def save_model_history(H: History, output_directory: Path, file_name: str) -> No
         output_directory (Path): The directory where the history file will be saved.
     """
     hist_df = pd.DataFrame(H.history)
+    logger.info(f"Model history saved as {file_name}")
     hist_df.to_csv(output_directory / f"{file_name}.csv", index=False)
 
 def augment_training_data(use_augmentation: bool = True) -> ImageDataGenerator:
