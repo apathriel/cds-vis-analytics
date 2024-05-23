@@ -4,7 +4,7 @@ from tensorflow.keras.applications.vgg16 import VGG16
 from tensorflow.keras.layers import BatchNormalization, Dense, Dropout, Flatten
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.optimizers.schedules import ExponentialDecay
-from tensorflow.keras.optimizers import Adam, SGD
+from tensorflow.keras.optimizers import Adam, SGD, Optimizer
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 from .logging_utilities import get_logger
@@ -12,7 +12,16 @@ from .logging_utilities import get_logger
 logger = get_logger(__name__)
 
 
-def augment_training_data(use_augmentation=True):
+def augment_training_data(use_augmentation: bool = True) -> ImageDataGenerator:
+    """
+    Create an ImageDataGenerator object for augmenting training data.
+
+    Parameters:
+    - use_augmentation (bool): Flag indicating whether to use data augmentation. Default is True.
+
+    Returns:
+    - datagen (ImageDataGenerator): An ImageDataGenerator object for augmenting training data.
+    """
     if use_augmentation:
         datagen = ImageDataGenerator(
             rotation_range=20,
@@ -27,17 +36,44 @@ def augment_training_data(use_augmentation=True):
 
     return datagen
 
-def load_saved_model(model_path):
+
+def load_saved_model(model_path: Path) -> Model:
+    """
+    Loads a saved model from the specified path.
+
+    Parameters:
+        model_path (str): The path to the saved model file.
+
+    Returns:
+        keras.models.Model: The loaded model.
+    """
     logger.info(f"Loading model from {model_path}")
     return load_model(model_path)
 
 
 def instantiate_VGG16_model(
-    model_include_top=False,
-    model_pooling="avg",
-    model_input_shape=(224, 224, 3),
-    disable_conv_training=True,
-):
+    model_include_top: bool = False,
+    model_pooling: str = "avg",
+    model_input_shape: tuple = (224, 224, 3),
+    disable_conv_training: bool = True,
+) -> Model:
+    """
+    Instantiate a VGG16 model with customizable options. By default, the model is intended for transfer learning through feature extraction.
+
+    Parameters:
+        model_include_top (bool, optional): Whether to include the fully-connected
+            layer at the top of the network. Defaults to False.
+        model_pooling (str, optional): Type of pooling to apply after the last
+            convolutional layer. Defaults to "avg".
+        model_input_shape (tuple, optional): Shape of the input images. Defaults
+            to (224, 224, 3).
+        disable_conv_training (bool, optional): Whether to disable training of
+            convolutional layers. Defaults to True.
+
+    Returns:
+        Model: The instantiated VGG16 model.
+
+    """
     model = VGG16(
         include_top=model_include_top,
         pooling=model_pooling,
@@ -53,7 +89,19 @@ def instantiate_VGG16_model(
 
 def define_classification_layers(
     model, batch_normalization_layer=True, dropout_layer=True, print_summary=False
-):
+) -> Model:
+    """
+    Defines the classification layers for a given model.
+
+    Parameters:
+        model (Model): The base model to which the classification layers will be added.
+        batch_normalization_layer (bool, optional): Whether to include a batch normalization layer. Defaults to True.
+        dropout_layer (bool, optional): Whether to include a dropout layer. Defaults to True.
+        print_summary (bool, optional): Whether to print the summary of the model. Defaults to False.
+
+    Returns:
+        Model: The model with the classification layers added.
+    """
     logger.info("Adding classification layers to the model.")
     # Flatten the output of the VGG16 model
     flat1 = Flatten()(model.layers[-1].output)
@@ -76,8 +124,27 @@ def define_classification_layers(
 
 
 def save_trained_model(
-    model, output_dir: Path, model_format="keras", file_name="VGG16_tobacco_model"
+    model: Model,
+    output_dir: Path,
+    model_format: str = "keras",
+    file_name: str = "VGG16_tobacco_model",
 ):
+    """
+    Save a trained model to the specified output directory.
+
+    Parameters:
+        model: The trained model to be saved.
+        output_dir (Path): The directory where the model will be saved.
+        model_format (str, optional): The format in which the model will be saved.
+            Valid options are "HDF5", "SavedModel", and "keras". Defaults to "keras".
+        file_name (str, optional): The name of the saved model file. Defaults to "VGG16_tobacco_model".
+
+    Raises:
+        ValueError: If an invalid model format is provided.
+
+    Returns:
+        None
+    """
     valid_formats = ["HDF5", "SavedModel", "keras"]
     if model_format not in valid_formats:
         raise ValueError(
@@ -98,7 +165,10 @@ def save_trained_model(
 
 
 def instantiate_optimizer(
-    optimizer_type="Adam", init_learn_rate=0.001, decay_steps=10000, decay_rate=0.9
+    optimizer_type: str = "Adam",
+    init_learn_rate: float = 0.001,
+    decay_steps: int = 10000,
+    decay_rate: float = 0.9,
 ):
     lr_schedule = ExponentialDecay(
         initial_learning_rate=init_learn_rate,
@@ -114,7 +184,7 @@ def instantiate_optimizer(
         raise ValueError("[ERROR] Invalid optimizer_type. Expected 'SGD' or 'Adam'.")
 
 
-def compile_model(model, optimizer):
+def compile_model(model: Model, optimizer: Optimizer) -> Model:
     # Keras compile modifies model in-place. Return for explicitness.
     model.compile(
         optimizer=optimizer, loss="categorical_crossentropy", metrics=["accuracy"]

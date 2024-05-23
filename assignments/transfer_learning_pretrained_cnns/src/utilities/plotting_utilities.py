@@ -2,19 +2,36 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+from tensorflow.keras.callbacks import History
 
 from .logging_utilities import get_logger
 
 logger = get_logger(__name__)
 
+
 def plot_history(
-    H,
+    H: History,
     num_of_epochs: int,
     save_plot: bool = False,
     output_dir: str = "out",
     plot_name: str = "VGG16_tobacco_plot",
     plot_format: str = "png",
 ):
+    """
+    Plots the loss and accuracy curves for a given training history.
+
+    Parameters:
+        H (History): The training history object containing the loss and accuracy values.
+        num_of_epochs (int): The number of epochs for which the training history is available.
+        save_plot (bool, optional): Whether to save the plot as an image file. Defaults to False.
+        output_dir (str, optional): The directory where the plot will be saved. Defaults to "out".
+        plot_name (str, optional): The name of the plot file. Defaults to "VGG16_tobacco_plot".
+        plot_format (str, optional): The format of the plot file. Defaults to "png".
+
+    Raises:
+        ValueError: If the specified plot_format is not supported.
+    """
+
     valid_output_formats = [
         "eps",
         "jpeg",

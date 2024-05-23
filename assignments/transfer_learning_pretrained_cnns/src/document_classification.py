@@ -2,6 +2,7 @@ from pathlib import Path
 
 import click
 from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras.models import Model
 from sklearn.metrics import classification_report
 
 
@@ -34,7 +35,19 @@ def model_pipeline(
     load_existing_model: bool = False,
     output_model_summary: bool = False,
     optimizer_type: str = "Adam",
-):
+) -> Model:
+    """
+    Function responsible for generating and compiling a model architecture based on pre-trained model for document classification.
+
+    Parameters:
+        model_path (Path): The path to the saved model file.
+        load_existing_model (bool): Whether to load an existing model from the given model path. Default is False.
+        output_model_summary (bool): Whether to print the summary of the compiled model. Default is False.
+        optimizer_type (str): The type of optimizer to use for model compilation. Written for either Adam or SGD. Default is Adam.
+
+    Returns:
+        compiled_model: The compiled model for document classification.
+    """
     if load_existing_model:
         logger.info(f"Loading model from {model_path}")
         if not model_path.exists():
@@ -56,7 +69,16 @@ def save_classification_report(
     output_dir: Path,
     log_output: bool = True,
     file_name: str = "VGG16_tobacco_report.txt",
-):
+) -> None:
+    """
+    Saves the classification report to a file.
+
+    Paramters:
+        classification_report (str): The classification report to be saved.
+        output_dir (Path): The directory where the file will be saved.
+        log_output (bool, optional): Whether to log the classification report. Defaults to True.
+        file_name (str, optional): The name of the file to be saved. Defaults to "VGG16_tobacco_report.txt".
+    """
     if log_output:
         logger.info(f"Classification Report:\n{classification_report}")
 
