@@ -23,6 +23,8 @@ from utilities.model_compilation_utilities import (
     instantiate_VGG16_model,
     load_saved_model,
     save_trained_model,
+    save_model_history,
+    load_model_history_as_dict
 )
 from utilities.plotting_utilities import plot_history
 
@@ -167,14 +169,14 @@ def main(
         output_model_summary=print_model_summary,
     )
 
-    if not use_saved_model:
-        # Load and preprocess training data, split data, binarize labels
-        X, y = load_and_preprocess_training_data(data_dir)
-        X_train, X_test, y_train, y_test = split_data(
-            X, y, test_size=test_split_size, validation_size=None, stratify=y
-        )
-        y_train, y_test = binarize_and_fit_labels(y_train, y_test)
+    # Load and preprocess training data, split data, binarize labels
+    X, y = load_and_preprocess_training_data(data_dir)
+    X_train, X_test, y_train, y_test = split_data(
+        X, y, test_size=test_split_size, validation_size=None, stratify=y
+    )
+    y_train, y_test = binarize_and_fit_labels(y_train, y_test)
 
+    if not use_saved_model:
         # Augment training data, will only modify training data if use_augmentation is True
         data_gen = augment_training_data(use_augmentation=True)
 
@@ -195,6 +197,7 @@ def main(
         )
         logger.info("Model training completed.")
 
+        save_model_history(H, path_to_model_directory, file_name="VGG16_tobacco_history")
         save_trained_model(model, path_to_model_directory, model_format="keras")
 
     predictions = model.predict(X_test, batch_size=batch_size)

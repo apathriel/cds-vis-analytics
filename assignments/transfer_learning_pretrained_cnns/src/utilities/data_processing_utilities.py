@@ -9,11 +9,13 @@ from tensorflow.keras.preprocessing.image import (
     img_to_array,
     load_img,
 )
+
 from tqdm import tqdm
 
 from .logging_utilities import get_logger
 
 logger = get_logger(__name__)
+
 
 
 def initialize_data_directory(data_path: Path) -> Path:

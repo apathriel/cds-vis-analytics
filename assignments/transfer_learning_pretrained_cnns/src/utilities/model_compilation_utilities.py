@@ -1,6 +1,8 @@
 from pathlib import Path
 
+import pandas as pd
 from tensorflow.keras.applications.vgg16 import VGG16
+from tensorflow.keras.callbacks import History
 from tensorflow.keras.layers import BatchNormalization, Dense, Dropout, Flatten
 from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.optimizers.schedules import ExponentialDecay
@@ -11,6 +13,34 @@ from .logging_utilities import get_logger
 
 logger = get_logger(__name__)
 
+def load_model_history_as_dict(input_directory: Path, file_name: str) -> dict:
+    """
+    Load the training history from a file.
+
+    Parameters:
+        input_directory (Path): The directory where the history file is saved.
+        file_name (str): The name of the history file.
+
+    Returns:
+        dict: The training history as a dictionary.
+    """
+    try:
+        hist_df = pd.read_csv(input_directory / f"{file_name}.csv")
+        return hist_df.to_dict()
+    except Exception as e:
+        logger.error(f"Error in load_model_history_as_dict: {e}")
+        return None
+
+def save_model_history(H: History, output_directory: Path, file_name: str) -> None:
+    """
+    Save the training history to a file.
+
+    Parameters:
+        H (History): The training history object.
+        output_directory (Path): The directory where the history file will be saved.
+    """
+    hist_df = pd.DataFrame(H.history)
+    hist_df.to_csv(output_directory / f"{file_name}.csv", index=False)
 
 def augment_training_data(use_augmentation: bool = True) -> ImageDataGenerator:
     """
