@@ -177,8 +177,9 @@ def main(
     y_train, y_test = binarize_and_fit_labels(y_train, y_test)
 
     if use_saved_model:
-        H = load_model_history_as_dict(path_to_model_directory, "VGG16_tobacco_history")
+         H, number_of_rows = load_model_history_as_dict(path_to_model_directory, "VGG16_tobacco_history")
     else:
+        number_of_rows = None
         # Augment training data, will only modify training data if use_augmentation is True
         data_gen = augment_training_data(use_augmentation=True)
 
@@ -218,6 +219,7 @@ def main(
 
     plot_history(
         H,
+        num_of_csv_rows=number_of_rows,
         save_plot=True,
         output_dir="out",
         plot_name="VGG16_tobacco_plot",

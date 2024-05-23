@@ -26,8 +26,9 @@ def load_model_history_as_dict(input_directory: Path, file_name: str) -> dict:
     """
     try:
         hist_df = pd.read_csv(input_directory / f"{file_name}.csv")
+        number_of_rows = hist_df.shape[0]
         logger.info(f"Model history saved as {file_name}")
-        return hist_df.to_dict()
+        return hist_df.to_dict(), number_of_rows
     except Exception as e:
         logger.error(f"Error in load_model_history_as_dict: {e}")
         return None

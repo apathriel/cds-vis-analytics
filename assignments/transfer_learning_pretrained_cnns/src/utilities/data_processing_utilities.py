@@ -17,7 +17,6 @@ from .logging_utilities import get_logger
 logger = get_logger(__name__)
 
 
-
 def initialize_data_directory(data_path: Path) -> Path:
     """
     Initializes the data directory.

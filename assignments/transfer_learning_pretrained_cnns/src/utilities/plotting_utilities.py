@@ -1,4 +1,5 @@
 import os
+from typing import Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,7 +11,8 @@ logger = get_logger(__name__)
 
 
 def plot_history(
-    H: History,
+    H: Union[History, dict],
+    num_of_csv_rows: int = None,
     save_plot: bool = False,
     output_dir: str = "out",
     plot_name: str = "VGG16_tobacco_plot",
@@ -49,7 +51,10 @@ def plot_history(
     if plot_format not in valid_output_formats:
         raise ValueError(f"plot_format must be one of {valid_output_formats}")
     
-    num_of_epochs = len(H.history['loss'])
+    if isinstance(H, History):
+        num_of_epochs = len(H.history['loss'])
+    elif isinstance(H, dict):
+        num_of_epochs = num_of_csv_rows
 
     plt.figure(figsize=(12, 6))
     plt.subplot(1, 2, 1)
