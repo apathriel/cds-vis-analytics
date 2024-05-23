@@ -53,7 +53,7 @@ def model_pipeline(
     """
     if load_existing_model:
         model_path = model_directory / model_file_name
-        logger.info(f"Loading model from {model}")
+        logger.info(f"Loading model from {model_path}")
         if not model_path.exists():
             raise FileNotFoundError(f"No model found at {model_path}")
         return load_saved_model(model_path)
@@ -165,6 +165,7 @@ def main(
     model = model_pipeline(
         model_directory=path_to_model_directory,
         model_file_name=model_title,
+        load_existing_model=use_saved_model,
         optimizer_type=optimizer_type,
         output_model_summary=print_model_summary,
     )
@@ -175,14 +176,14 @@ def main(
         X, y, test_size=test_split_size, validation_size=None, stratify=y
     )
     y_train, y_test = binarize_and_fit_labels(y_train, y_test)
+    data_gen = augment_training_data(use_augmentation=True)
 
     if use_saved_model:
          H, number_of_rows = load_model_history_as_dict(path_to_model_directory, "VGG16_tobacco_history")
     else:
         number_of_rows = None
         # Augment training data, will only modify training data if use_augmentation is True
-        data_gen = augment_training_data(use_augmentation=True)
-
+       
         # Early stopping functionality
         early_stopping = EarlyStopping(
             monitor="val_loss", patience=3, verbose=1, mode="auto"
