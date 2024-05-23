@@ -43,31 +43,31 @@ def model_pipeline(
     Function responsible for generating and compiling a model architecture based on pre-trained model for document classification.
 
     Parameters:
-        model_path (Path): The path to the saved model file.
+        model_directory (Path): The directory where the model file is located.
+        model_file_name (str): The name of the model file.
         load_existing_model (bool): Whether to load an existing model from the given model path. Default is False.
         output_model_summary (bool): Whether to print the summary of the compiled model. Default is False.
         optimizer_type (str): The type of optimizer to use for model compilation. Written for either Adam or SGD. Default is Adam.
 
     Returns:
-        compiled_model: The compiled model for document classification.
+        compiled_model (Model): The compiled model for document classification.
     """
     if load_existing_model:
         model_path = model_directory / model_file_name
         logger.info(f"Loading model from {model_path}")
         if not model_path.exists():
             raise FileNotFoundError(f"No model found at {model_path}")
-        return load_saved_model(model_path)
-
-    logger.info("Creating new model...")
-    optimizer = instantiate_optimizer(optimizer_type=optimizer_type)
-    model = define_classification_layers(instantiate_VGG16_model())
-    compiled_model = compile_model(model, optimizer)
+        compiled_model = load_saved_model(model_path)
+    else:
+        logger.info("Creating new model...")
+        optimizer = instantiate_optimizer(optimizer_type=optimizer_type)
+        model = define_classification_layers(instantiate_VGG16_model())
+        compiled_model = compile_model(model, optimizer)
 
     if output_model_summary:
         logger.info(compiled_model.summary())
 
     return compiled_model
-
 
 def save_classification_report(
     classification_report: str,
