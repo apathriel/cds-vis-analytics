@@ -213,7 +213,7 @@ def main():
         visualize_results=True,
         visualization_parameters=VISUALIZATION_PARAMS,
         tqdm_parameters=TQDM_PARAMS,
-        num_images_to_process=300,
+        num_images_to_process=None,
     )
 
 
