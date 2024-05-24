@@ -10,8 +10,14 @@ from code_utilities import get_logger
 logger = get_logger(__name__)
 
 
-
 def summarize_file_types(directory: Path) -> None:
+    """
+    Summarizes the file types in a given directory.
+
+    Parameters:
+        directory (Path): The directory to analyze.
+
+    """
     file_types = Counter()
 
     for file in Path(directory).rglob("*"):
@@ -21,13 +27,41 @@ def summarize_file_types(directory: Path) -> None:
     for file_type, count in file_types.items():
         print(f"{file_type}: {count}")
 
+
+
 def get_num_files_in_directory(directory: Path, file_type: str = None) -> int:
+    """
+    Count the number of files in a directory.
+
+    Parameters:
+        directory (Path): The directory to search for files.
+        file_type (str, optional): The file extension to filter by. Defaults to None.
+
+    Returns:
+        int: The number of files in the directory.
+
+    """
     if file_type:
         return len(list(directory.glob(f"*.{file_type}")))
     else:
         return len(list(directory.glob("*")))
-    
+
+
 def extract_metadata_from_filename(file_path: Path) -> dict:
+    """
+    Extracts specific metadata from a given file path.
+
+    Parameters:
+        file_path (Path): The path of the file.
+
+    Returns:
+        dict: A dictionary containing the extracted metadata, including the file name, newspaper name,
+              decade, month, date, and page.
+
+    Raises:
+        ValueError: If the filename format is invalid.
+        Exception: If an unexpected error occurs while extracting metadata from the filename.
+    """
     try:
         filename = file_path.name
         newspaper_name, year, month, date, _, page = filename.split("-")
@@ -45,8 +79,22 @@ def extract_metadata_from_filename(file_path: Path) -> dict:
     except Exception as e:
         logger.error(f"Unexpected error extracting metadata from filename: {e}")
         return {}
-    
-def export_df_as_csv(df: pd.DataFrame, directory: Path, filename: str):
+
+
+def export_df_as_csv(df: pd.DataFrame, directory: Path, filename: str) -> None:
+    """
+    Export a pandas DataFrame as a CSV file.
+
+    Paramters:
+        df (pd.DataFrame): The DataFrame to be exported.
+        directory (Path): The directory where the CSV file will be saved.
+        filename (str): The name of the CSV file.
+
+    Raises:
+        PermissionError: If the function does not have permission to create the directory or write the file.
+        OSError: If an OS error occurs when trying to create the directory.
+        Exception: If an unexpected error occurs when trying to write to the file.
+    """
     try:
         # Create the directory if it doesn't exist
         directory.mkdir(parents=True, exist_ok=True)
@@ -67,7 +115,26 @@ def export_df_as_csv(df: pd.DataFrame, directory: Path, filename: str):
     except Exception as e:
         logger.error(f"Unexpected error occurred when trying to write to file: {e}")
 
-def load_csv_as_df_from_directory(directory: Path, return_filenames: bool = False) -> Union[Dict[str, pd.DataFrame], List[pd.DataFrame]]:
+
+def load_csv_as_df_from_directory(
+    directory: Path, return_filenames: bool = False
+) -> Union[Dict[str, pd.DataFrame], List[pd.DataFrame]]:
+    """
+    Load CSV files from a directory into pandas DataFrames.
+
+    Parameters:
+        directory (Path): The directory path where the CSV files are located.
+        return_filenames (bool, optional): Whether to return a dictionary with filenames as keys and DataFrames as values.
+            If False, a list of DataFrames will be returned. Defaults to False.
+
+    Returns:
+        Union[Dict[str, pd.DataFrame], List[pd.DataFrame]]: A dictionary or list of pandas DataFrames containing the loaded CSV data.
+
+    Raises:
+        FileNotFoundError: If the specified directory is not found.
+        Exception: If an unexpected error occurs while loading the CSV files.
+
+    """
     try:
         # Get a list of all CSV files in the directory
         csv_files = glob.glob(f"{directory}/*.csv")
@@ -85,10 +152,22 @@ def load_csv_as_df_from_directory(directory: Path, return_filenames: bool = Fals
     except Exception as e:
         logger.error(f"Unexpected error loading CSV files from directory: {e}")
         return []
-    
+
+
 def get_df_by_newspaper_facial_recognition_metrics(
     df: pd.DataFrame, face_percentage_column_title: str
 ) -> pd.DataFrame:
+    """
+    Calculate facial recognition metrics for each decade based on the given DataFrame.
+
+    Paramters:
+        df (pd.DataFrame): The input DataFrame containing the data.
+        face_percentage_column_title (str): The title of the column to store the calculated face percentage.
+
+    Returns:
+        pd.DataFrame: The resulting DataFrame with the calculated metrics.
+
+    """
     # Calculate total number of faces and total number of pages for each decade
     total_faces_and_pages = (
         df.groupby("Decade").agg({"Num Faces": "sum", "Page": "count"}).reset_index()
