@@ -157,17 +157,6 @@ def load_csv_as_df_from_directory(
 def get_df_by_newspaper_facial_recognition_metrics(
     df: pd.DataFrame, face_percentage_column_title: str
 ) -> pd.DataFrame:
-    """
-    Calculate facial recognition metrics for each decade based on the given DataFrame.
-
-    Paramters:
-        df (pd.DataFrame): The input DataFrame containing the data.
-        face_percentage_column_title (str): The title of the column to store the calculated face percentage.
-
-    Returns:
-        pd.DataFrame: The resulting DataFrame with the calculated metrics.
-
-    """
     # Calculate total number of faces and total number of pages for each decade
     total_faces_and_pages = (
         df.groupby("Decade").agg({"Num Faces": "sum", "Page": "count"}).reset_index()
@@ -178,18 +167,14 @@ def get_df_by_newspaper_facial_recognition_metrics(
         df[df["Num Faces"] > 0].groupby("Decade").agg({"Page": "count"}).reset_index()
     )
 
-    # Create a DataFrame that includes all possible decades
-    all_decades = pd.DataFrame(
-        {"Decade": range(df["Decade"].min(), df["Decade"].max() + 1)}
-    )
-
-    # Merge the three dataframes on "Decade"
-    df = all_decades.merge(total_faces_and_pages, on="Decade", how="left").merge(
+    # Merge the two dataframes on "Decade"
+    df = total_faces_and_pages.merge(
         num_pages_with_faces,
         on="Decade",
         how="left",
         suffixes=("_total", "_with_faces"),
     )
+
     # Fill NaN values with 0
     df.fillna(0, inplace=True)
 

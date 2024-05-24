@@ -106,7 +106,7 @@ bash setup_unix.sh
 4. Activate virtual environment (OS-specific) and run main py scripts.
 ```sh
 source env/bin/activate
-python src/face_detection.py
+python src/document_classification.py
 ```
 
 ## 🚀 Usage
